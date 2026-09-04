@@ -1,5 +1,4 @@
 import streamlit as st
-import google.generativeai as genai
 
 # Sayfa Ayarları
 st.set_page_config(page_title="Molène Mağazalar AI Asistanı", page_icon="🎯", layout="wide")
@@ -28,16 +27,10 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- YAPAY ZEKA ÇEKİRDEĞİ ---
-# Güvenli dahili anahtar yapılandırması
-try:
-    if "GOOGLE_API_KEY" in st.secrets:
-        genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-except:
-    pass
+# --- VERİ TABANI VE MOTOR ---
 
 st.title("🎯 Molène Tüm Mağazalar Hedef ve Performans Takip Asistanı")
-st.markdown("Mağaza ciro hedefleri, Ağustos/Eylül performansları ve operasyon asistanı.")
+st.markdown("Ağustos ve Eylül ayı bütçe, ciro ve mağaza operasyonları asistanı.")
 
 # Sohbet Geçmişi
 if "messages" not in st.session_state:
@@ -47,44 +40,59 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Örn: Eylül ayı Ankara mağazası durumu nedir? Veya Yiğit Deniz Ünseven kimdir?"):
+if prompt := st.chat_input("Örn: Ağustos ayı toplamı kaç? Veya Eylül ayı hedefleri ne durumda?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        soru_kucuk = prompt.lower()
+        soru = prompt.lower()
         bot_yaniti = ""
 
-        # 1. KATI KURALLAR (Yiğit Deniz ve Güvenlik Duvarı)
-        if any(k in soru_kucuk for k in ["yiğit", "deniz", "ünseven"]):
+        # 1. Yiğit Deniz / Deniz Bey Kuralı
+        if any(k in soru for k in ["yiğit", "deniz", "ünseven"]):
             bot_yaniti = "O sizin için burada, sorgulamayın, dediğini yapın geçin! :)"
         
-        # 2. SELAMLAMA
-        elif any(k in soru_kucuk for k in ["selam", "merhaba", "mrb", "günaydın", "iyi akşamlar", "nasılsın", "ne naber", "naber"]):
-            bot_yaniti = "Aleykümselam! Çok iyiyim, Molène verilerini ve mağaza hedeflerini inceliyorum. Sen nasılsın, hangi veriye bakıyoruz?"
+        # 2. Selamlaşma
+        elif any(k in soru for k in ["selam", "merhaba", "mrb", "günaydın", "iyi akşamlar", "nasılsın", "ne naber", "naber"]):
+            bot_yaniti = "Aleykümselam! Çok iyiyim, Ağustos ve Eylül ayı verilerini inceliyorum. Sen nasılsın, hangi döneme bakıyoruz?"
         
-        # 3. PATRONLAR VE ŞİRKET BİLGİSİ
-        elif any(k in soru_kucuk for k in ["patron", "sahip", "kurucu", "ortak", "bilal", "semih", "molène", "molene"]):
+        # 3. Patronlar ve Şirket Bilgisi
+        elif any(k in soru for k in ["patron", "sahip", "kurucu", "ortak", "bilal", "semih", "molène", "molene"]):
             bot_yaniti = (
                 "Molène markasının kurucu ortakları Bilal Bey & eşi Ayşegül Hanım ile Semih Bey & eşi Esma Hanım'dır. "
                 "İdari, raporlama ve operasyonel yönetim otoritesi ise Yiğit Deniz Ünseven'dir."
             )
         
-        # 4. MAĞAZALAR VE CİRO / HEDEF VERİLERİ (Ağustos & Eylül)
-        elif any(k in soru_kucuk for k in ["hedef", "ciro", "eylül", "ağustos", "bütçe", "prim", "satış", "ankara", "merter", "zeruj", "mağaza", "adet"]):
+        # 4. Ağustos Ayı Verileri
+        elif "ağustos" in soru:
             bot_yaniti = (
-                "📉 **Ağustos & Eylül Dönemi Mağaza Performans Özeti:**\n\n"
-                "• **Ağustos Ayı:** Verilerimiz sistemde kayıtlı olup aylık kapanış analizleri tamamlanmıştır.\n"
-                "• **Eylül Ayı İlk 3 Gün Durumu:** Ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔\n"
-                "  - **Toplam Hedef:** 12.086.275 TRY (9.592 Adet) | **Gerçekleşen:** 626.615 TRY (525 Adet)\n"
-                "  - **Ankara Mağaza:** Hedef 3.506.994 TRY | İlk 3 gün gerçekleşen toplam 187.495 TRY (166 Adet)\n"
-                "  - **Merter Mağaza:** Hedef 1.108.987 TRY | İlk 3 gün gerçekleşen toplam 68.620 TRY (62 Adet)\n"
-                "  - **Zeruj Toplam:** Hedef 7.470.294 TRY | İlk 3 gün gerçekleşen toplam 370.499 TRY (297 Adet)\n\n"
-                "Hedefleri yakalamak için alokasyon ve sevkiyat stratejilerini acilen sıkı tutmalıyız!"
+                "📈 **Ağustos Ayı Mağaza Performans ve Ciro Özeti:**\n\n"
+                "- **Ankara Mağaza Ağustos:** Hedef ve gerçekleşen bütçe takipleri tamamlandı, kapanış raporları sistemde kayıtlı.\n"
+                "- **Merter Mağaza Ağustos:** Sezon sonu çıkışları ve ağustos ayı operasyonel ciro verileri işlendi.\n"
+                "- **Zeruj Toplam Ağustos:** AG & EG mağazalarının ağustos ayı toplam ciroları ve adet gerçekleşmeleri dosyalandı.\n\n"
+                "Ağustos kapanış verilerinin detayları için ilgili rapor sekmesini inceleyebilirsin."
             )
         
-        # 5. KAPSAM DIŞI HER ŞEY İÇİN KATI DUVAR (Sadece istenenler konuşulur)
+        # 5. Eylül Ayı Verileri
+        elif "eylül" in soru:
+            bot_yaniti = (
+                "📉 **Eylül Ayı İlk 3 Gün Durumu:** Ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔\n\n"
+                "- **Toplam Hedef:** 12.086.275 TRY (9.592 Adet) | **Gerçekleşen:** 626.615 TRY (525 Adet)\n"
+                "- **Ankara Mağaza:** Hedef 3.506.994 TRY | İlk 3 gün toplam: 187.495 TRY (166 Adet)\n"
+                "- **Merter Mağaza:** Hedef 1.108.987 TRY | İlk 3 gün toplam: 68.620 TRY (62 Adet)\n"
+                "- **Zeruj Toplam:** Hedef 7.470.294 TRY | İlk 3 gün toplam: 370.499 TRY (297 Adet)"
+            )
+        
+        # 6. Genel Mağaza ve Ciro Soruları
+        elif any(k in soru for k in ["hedef", "ciro", "bütçe", "prim", "satış", "ankara", "merter", "zeruj", "mağaza"]):
+            bot_yaniti = (
+                "📊 **Genel Mağaza Verileri:**\n"
+                "Sistemimizde **Ağustos ayı** kapanış verileri ile **Eylül ayı ilk 3 gün** hedef ve gerçekleşen ciro/adet tablosu bulunmaktadır. "
+                "Hangi ayın (Ağustos veya Eylül) detayını incelemek istiyorsun?"
+            )
+        
+        # 7. Kapsam Dışı Güvenlik Duvarı
         else:
             bot_yaniti = "Bu konu hakkında bilgi vermem, Deniz bey kızar :)"
 
