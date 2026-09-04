@@ -1,9 +1,8 @@
 import streamlit as st
-import pandas as pd
 
 # Sayfa Ayarları
 st.set_page_config(
-    page_title="Molène Mağazalar | Ağustos Kapanış & Eylül Canlı Dashboard", 
+    page_title="Molène Mağazalar | Yönetim Paneli & Dashboard", 
     page_icon="🎯", 
     layout="wide"
 )
@@ -32,28 +31,61 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- GOOGLE E-TABLO (AI SAYFA) CANLI VERİ ÇEKME MOTORU ---
-@st.cache_data(ttl=10) # Her 10 saniyede bir tablodaki güncellemeleri kontrol eder
-def canli_veri_cek():
-    try:
-        sheet_id = "1TFXBAtfGrCLQzze7Llbg4fI0pWL2kkWEb0eBuX71kKE"
-        sheet_name = "ai Sayfa"
-        url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
-        df = pd.read_csv(url)
-        return df, True
-    except Exception as e:
-        return None, False
-
-df_eylul, veri_durumu = canli_veri_cek()
-
-# --- AĞUSTOS SABİT KAPANIŞ VERİLERİ ---
+# --- AUGUSTOS SABİT VERİLERİ ---
 AGUSTOS_VERILERI = {
     "toplam": {"hedef_ciro": 10215505.88, "gerceklesen_ciro": 10071896.05, "oran": "%99"},
 }
 
-# --- DASHBOARD ARAYÜZÜ ---
+# --- EYLÜL VERİLERİ İÇİN STATE (HAFIZA) YÖNETİMİ ---
+if "eylul_ankara_ciro" not in st.session_state:
+    st.session_state.eylul_ankara_ciro = 187495.0
+    st.session_state.eylul_ankara_adet = 166
+    st.session_state.eylul_merter_ciro = 68620.0
+    st.session_state.eylul_merter_adet = 62
+    st.session_state.eylul_zeruj_ciro = 370499.0
+    st.session_state.eylul_zeruj_adet = 297
+
+# --- YAN MENÜ: VERİ GİRİŞ PANELİ ---
+st.sidebar.header("⚙️ Eylül Veri Giriş Paneli")
+st.sidebar.markdown("Yarın veriler değiştiğinde buraya yazıp **Güncelle** butonuna basman yeterlidir.")
+
+with st.sidebar.form("veri_formu"):
+    st.subheader("🏛️ Ankara Mağaza")
+    ankara_c = st.number_input("Ankara Ciro (TRY)", value=st.session_state.eylul_ankara_ciro)
+    ankara_a = st.number_input("Ankara Adet", value=st.session_state.eylul_ankara_adet, step=1)
+    
+    st.subheader("🏬 Merter Mağaza")
+    merter_c = st.number_input("Merter Ciro (TRY)", value=st.session_state.eylul_merter_ciro)
+    merter_a = st.number_input("Merter Adet", value=st.session_state.eylul_merter_adet, step=1)
+    
+    st.subheader("🛍️ Zeruj Mağaza")
+    zeruj_c = st.number_input("Zeruj Ciro (TRY)", value=st.session_state.eylul_zeruj_ciro)
+    zeruj_a = st.number_input("Zeruj Adet", value=st.session_state.eylul_zeruj_adet, step=1)
+    
+    submit_btn = st.form_submit_button("🔄 Verileri Güncelle")
+    
+    if submit_btn:
+        st.session_state.eylul_ankara_ciro = ankara_c
+        st.session_state.eylul_ankara_adet = ankara_a
+        st.session_state.eylul_merter_ciro = merter_c
+        st.session_state.eylul_merter_adet = merter_a
+        st.session_state.eylul_zeruj_ciro = zeruj_c
+        st.session_state.eylul_zeruj_adet = zeruj_a
+        st.success("Veriler başarıyla güncellendi!")
+
+# --- HESAPLAMALAR ---
+# Hedefler sabit
+hedef_ankara, hedef_merter, hedef_zeruj = 3506994.0, 1108987.0, 7470294.0
+hedef_toplam_ciro = hedef_ankara + hedef_merter + hedef_zeruj
+hedef_toplam_adet = 2783 + 880 + 5929
+
+gerc_toplam_ciro = st.session_state.eylul_ankara_ciro + st.session_state.eylul_merter_ciro + st.session_state.eylul_zeruj_ciro
+gerc_toplam_adet = st.session_state.eylul_ankara_adet + st.session_state.eylul_merter_adet + st.session_state.eylul_zeruj_adet
+genel_oran = (gerc_toplam_ciro / hedef_toplam_ciro) * 100 if hedef_toplam_ciro > 0 else 0
+
+# --- ANA DASHBOARD EKRANI ---
 st.title("🎯 Molène Mağazalar | Ağustos & Eylül Performans Dashboard")
-st.markdown("Ağustos resmi kapanış verileri ve Google E-Tablolar ('ai Sayfa') üzerinden anlık güncellenen Eylül takip ekranı.")
+st.markdown("Ağustos resmi kapanış verileri ve yan panelden anlık güncellenen Eylül takip ekranı.")
 
 st.markdown("### 📈 Ağustos Ayı Kesinleşmiş Kapanış Özet Kartları")
 c1, c2, c3, c4 = st.columns(4)
@@ -65,13 +97,25 @@ c4.metric("Kapanış Durumu", "Tamamlandı 🟢")
 
 st.markdown("---")
 
-st.markdown("### 📉 Eylül Ayı Canlı Veri Akışı ve Mağaza Analizleri")
+st.markdown("### 📉 Eylül Ayı Canlı Performans Özeti")
+e1, e2, e3, e4 = st.columns(4)
+e1.metric("Eylül Hedef Ciro", f"{hedef_toplam_ciro:,.2f} TRY")
+e2.metric("Eylül Gerçekleşen", f"{gerc_toplam_ciro:,.2f} TRY")
+e3.metric("Hedef / Gerç. Adet", f"{hedef_toplam_adet} / {gerc_toplam_adet}")
+e4.metric("Eylül Gerçekleşme", f"%{genel_oran:.1f}")
 
-if veri_durumu and df_eylul is not None:
-    st.success("Google E-Tablolar ('ai Sayfa') verisi başarıyla senkronize edildi. Tabloya veri girdikçe burası otomatik güncellenir.")
-    st.dataframe(df_eylul, use_container_width=True)
-else:
-    st.error("Google E-Tablo verisi okunamadı. Lütfen Google E-Tablonuzda paylaşım ayarlarının **'Bağlantıya sahip olan herkes - Görüntüleyen'** olarak seçili olduğundan emin olun.")
+st.markdown("### 📌 Mağaza Bazlı Eylül Tablosu")
+
+ank_oran = (st.session_state.eylul_ankara_ciro / hedef_ankara) * 100
+mer_oran = (st.session_state.eylul_merter_ciro / hedef_merter) * 100
+zer_oran = (st.session_state.eylul_zeruj_ciro / hedef_zeruj) * 100
+
+eylül_tablo = [
+    {"Mağaza": "Ankara", "Hedef Ciro": f"{hedef_ankara:,.0f} TRY", "Gerçekleşen Ciro": f"{st.session_state.eylul_ankara_ciro:,.0f} TRY", "Hedef Adet": 2783, "Gerç. Adet": st.session_state.eylul_ankara_adet, "Gerçekleşme": f"%{ank_oran:.1f}", "Durum": "Kritik 🔴"},
+    {"Mağaza": "Merter", "Hedef Ciro": f"{hedef_merter:,.0f} TRY", "Gerçekleşen Ciro": f"{st.session_state.eylul_merter_ciro:,.0f} TRY", "Hedef Adet": 880, "Gerç. Adet": st.session_state.eylul_merter_adet, "Gerçekleşme": f"%{mer_oran:.1f}", "Durum": "Kritik 🔴"},
+    {"Mağaza": "Zeruj Toplam", "Hedef Ciro": f"{hedef_zeruj:,.0f} TRY", "Gerçekleşen Ciro": f"{st.session_state.eylul_zeruj_ciro:,.0f} TRY", "Hedef Adet": 5929, "Gerç. Adet": st.session_state.eylul_zeruj_adet, "Gerçekleşme": f"%{zer_oran:.1f}", "Durum": "Kritik 🔴"},
+]
+st.table(eylül_tablo)
 
 st.markdown("---")
 st.markdown("### 📊 Mağaza Bazlı Detaylı Analiz & Değerlendirme")
@@ -81,23 +125,23 @@ col_a, col_b, col_c = st.columns(3)
 with col_a:
     st.markdown("#### 🏛️ Ankara Mağaza Analizi")
     st.markdown(
-        "- **Bütçe Takibi:** Tablodan anlık okunan verilere göre bütçe sapmaları analiz edilir.\n"
-        "- **Adet Verimliliği:** Hedef ve gerçekleşen adet oranları tabloya işlendiği anda buraya yansır.\n"
-        "- **Analiz:** Günlük girişlerle birlikte trafik ve dönüşüm performansları anlık izlenmektedir."
+        f"- **Bütçe Durumu:** {hedef_ankara:,.0f} TRY hedef karşısında {st.session_state.eylul_ankara_ciro:,.0f} TRY gerçekleşme.\n"
+        f"- **Adet Verimliliği:** 2.783 hedef adete karşılık {st.session_state.eylul_ankara_adet} adet çıkış.\n"
+        "- **Analiz:** Yan panelden girilen verilere göre bütçe sapmaları ve performans anlık olarak hesaplanmaktadır."
     )
 
 with col_b:
     st.markdown("#### 🏬 Merter Mağaza Analizi")
     st.markdown(
-        "- **Bütçe Takibi:** Tablodan anlık okunan verilere göre bütçe sapmaları analiz edilir.\n"
-        "- **Adet Verimliliği:** Hedef ve gerçekleşen adet oranları tabloya işlendiği anda buraya yansır.\n"
-        "- **Analiz:** Sezon geçişleri ve sepet ortalaması canlı veriler üzerinden takip edilmektedir."
+        f"- **Bütçe Durumu:** {hedef_merter:,.0f} TRY hedef karşısında {st.session_state.eylul_merter_ciro:,.0f} TRY gerçekleşme.\n"
+        f"- **Adet Verimliliği:** 880 hedef adete karşılık {st.session_state.eylul_merter_adet} adet çıkış.\n"
+        "- **Analiz:** Günlük ciro girişleriyle birlikte sepet ortalaması ve realize oranları takip edilmektedir."
     )
 
 with col_c:
     st.markdown("#### 🛍️ Zeruj Toplam Analizi")
     st.markdown(
-        "- **Bütçe Takibi:** Tablodan anlık okunan verilere göre bütçe sapmaları analiz edilir.\n"
-        "- **Adet Verimliliği:** Hedef ve gerçekleşen adet oranları tabloya işlendiği anda buraya yansır.\n"
-        "- **Analiz:** Kanal ağırlığı yüksek olan Zeruj verileri anlık olarak senkronize edilmektedir."
+        f"- **Bütçe Durumu:** {hedef_zeruj:,.0f} TRY hedef karşısında {st.session_state.eylul_zeruj_ciro:,.0f} TRY gerçekleşme.\n"
+        f"- **Adet Verimliliği:** 5.929 hedef adete karşılık {st.session_state.eylul_zeruj_adet} adet çıkış.\n"
+        "- **Analiz:** Kanal ağırlığı yüksek olan Zeruj verileri güncellendikçe yansımaktadır."
     )
