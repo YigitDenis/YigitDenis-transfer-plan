@@ -1,9 +1,13 @@
 import streamlit as st
 
-# Sayfa Ayarları
-st.set_page_config(page_title="Molène Mağazalar Karar Destek Asistanı", page_icon="🎯", layout="wide")
+# Sayfa Ayarları (Geniş Ekran ve Profesyonel Konsept)
+st.set_page_config(
+    page_title="Molène Mağazalar | Ağustos Kapanış & KPI Dashboard", 
+    page_icon="📊", 
+    layout="wide"
+)
 
-# Şifre Kontrolü (Şifre: 1907)
+# Kurumsal Şifre Kontrolü (Şifre: 1907)
 def check_password():
     def password_entered():
         if st.session_state["password"] == "1907":
@@ -13,11 +17,11 @@ def check_password():
             st.session_state["password_correct"] = False
 
     if "password_correct" not in st.session_state:
-        st.subheader("🔒 Kurumsal Giriş")
+        st.subheader("🔒 Molène Kurumsal Giriş")
         st.text_input("Yönetici Şifresini Giriniz:", type="password", on_change=password_entered, key="password")
         return False
     elif not st.session_state["password_correct"]:
-        st.subheader("🔒 Kurumsal Giriş")
+        st.subheader("🔒 Molène Kurumsal Giriş")
         st.text_input("Yönetici Şifresini Giriniz:", type="password", on_change=password_entered, key="password")
         st.error("😕 Şifre yanlış.")
         return False
@@ -27,83 +31,154 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- SİSTEM STATE (SEÇİM HAFIZASI) ---
-if "secilen_islem" not in st.session_state:
-    st.session_state.secilen_islem = None
+# --- AĞUSTOS KAPANIŞ KESİN VERİ TABANI ---
+AGUSTOS_VERILERI = {
+    "toplam": {
+        "hedef_ciro": 10215505.88, "gerceklesen_ciro": 10071896.05,
+        "hedef_adet": 6810, "gerceklesen_adet": 7520, "gerceklesme_oran": "%99"
+    },
+    "ankara": {
+        "hedef_ciro": 2760000.00, "gerceklesen_ciro": 2922495.00,
+        "hedef_adet": 1840, "gerceklesen_adet": 2379, "gerceklesme_oran": "%108"
+    },
+    "merter": {
+        "hedef_ciro": 884006.00, "gerceklesen_ciro": 924156.00,
+        "hedef_adet": 589, "gerceklesen_adet": 738, "gerceklesme_oran": "%105"
+    },
+    "zeruj_ag": {
+        "hedef_ciro": 4401000.00, "gerceklesen_ciro": 4322265.00,
+        "hedef_adet": 2934, "gerceklesen_adet": 3171, "gerceklesme_oran": "%98"
+    },
+    "zeruj_eg": {
+        "hedef_ciro": 2170500.00, "gerceklesen_ciro": 1902980.00,
+        "hedef_adet": 1447, "gerceklesen_adet": 1232, "gerceklesme_oran": "%88"
+    }
+}
 
-st.title("🎯 Molène Mağaza Yönetim ve Prim Simülasyon Terminali")
-st.markdown("Ağustos/Eylül ciro hedefleri, mağaza performansları ve prim hakediş simülasyonu.")
+# --- DASHBOARD BAŞLIĞI VE ÖZET KARTLARI (KPI METRİKLERİ) ---
+st.title("📊 Molène | Ağustos Ayı Kapanış ve Performans Dashboard")
+st.markdown("Ağustos ayı resmi kapanış verileri, mağaza bazlı ciro/adet gerçekleşmeleri ve operasyonel özet.")
 
-# --- ŞIKLAR / BUTONLAR MENÜSÜ ---
-st.markdown("### 📌 İşlem Seçiniz:")
+st.markdown("### 🏆 Ağustos Genel Performans Özet Kartları")
 col1, col2, col3, col4 = st.columns(4)
 
-with col1:
-    if st.button("📉 Eylül Ayı Genel Durum"):
-        st.session_state.secilen_islem = "eylul_genel"
-with col2:
-    if st.button("🏛️ Ankara Mağaza & Prim"):
-        st.session_state.secilen_islem = "ankara"
-with col3:
-    if st.button("🏬 Merter Mağaza & Prim"):
-        st.session_state.secilen_islem = "merter"
-with col4:
-    if st.button("🛍️ Zeruj Mağaza & Prim"):
-        st.session_state.secilen_islem = "zeruj"
-
-col5, col6 = st.columns(2)
-with col5:
-    if st.button("📈 Ağustos Ayı Kapanış Özeti"):
-        st.session_state.secilen_islem = "agustos"
-with col6:
-    if st.button("👑 Yönetim ve Şirket Bilgisi"):
-        st.session_state.secilen_islem = "yonetim"
+t_veri = AGUSTOS_VERILERI["toplam"]
+col1.metric("Toplam Hedef Ciro", f"{t_veri['hedef_ciro']:,.2f} TRY")
+col2.metric("Gerçekleşen Ciro", f"{t_veri['gerceklesen_ciro']:,.2f} TRY", delta="-143k TRY (%99)")
+col3.metric("Hedef Adet / Gerç. Adet", f"{t_veri['hedef_adet']} / {t_veri['gerceklesen_adet']}")
+col4.metric("Genel Gerçekleşme", t_veri['gerceklesme_oran'])
 
 st.markdown("---")
 
-# --- SEÇİME GÖRE YANIT ÜRETME ---
-islem = st.session_state.secilen_islem
+# --- MAĞAZA BAZLI DETAYLI KARŞILAŞTIRMA TABLOSU ---
+st.subheader("📌 Mağaza Bazlı Ağustos Kapanış Tablosu")
 
-if islem == "eylul_genel":
-    st.markdown("📉 **Eylül Ayı Toplam Durum (İlk 3 Gün):**")
-    st.markdown("- **Toplam Hedef Ciro:** 12.086.275 TRY (9.592 Adet)")
-    st.markdown("- **Gerçekleşen Toplam Ciro:** 626.615 TRY (525 Adet)")
-    st.warning("Eylül ayı genel ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔 Alokasyon ve mağaza sevkiyatlarını acilen sıkı tutmalıyız.")
+tablo_verisi = [
+    {"Mağaza": "Ankara", "Hedef Ciro": "2.760.000 TRY", "Gerçekleşen Ciro": "2.922.495 TRY", "Hedef Adet": 1840, "Gerç. Adet": 2379, "Performans": "%108 🟢"},
+    {"Mağaza": "Merter", "Hedef Ciro": "884.006 TRY", "Gerçekleşen Ciro": "924.156 TRY", "Hedef Adet": 589, "Gerç. Adet": 738, "Performans": "%105 🟢"},
+    {"Mağaza": "Zeruj Ag", "Hedef Ciro": "4.401.000 TRY", "Gerçekleşen Ciro": "4.322.265 TRY", "Hedef Adet": 2934, "Gerç. Adet": 3171, "Performans": "%98 🔴"},
+    {"Mağaza": "Zeruj Eg", "Hedef Ciro": "2.170.500 TRY", "Gerçekleşen Ciro": "1.902.980 TRY", "Hedef Adet": 1447, "Gerç. Adet": 1232, "Performans": "%88 🔴"},
+]
 
-elif islem == "ankara":
-    st.markdown("🏛️ **Ankara Mağaza Prim ve Hedef Simülasyonu:**")
-    st.markdown("- **Hedef Ciro:** 3.506.994 TRY | **Hedef Adet:** 2.783")
-    st.markdown("- **Mevcut Gerçekleşen (İlk 3 Gün):** 187.495 TRY | 166 Adet")
-    st.markdown("- **Mevcut Prim Hakedişi:** 0 TRY (%5.3 Gerçekleşme Oranı)")
-    st.markdown("📌 **Hedef Baremleri & Primler:**\n- %90 - %99: 25.250 TRY\n- %100 - %109: 42.084 TRY\n- %110+: 57.865 TRY")
-    st.warning("Hedeflerin çok gerisindeyiz, primi yakalamak için tempoyu artırmalıyız! 📉😔")
+st.table(tablo_verisi)
 
-elif islem == "merter":
-    st.markdown("🏬 **Merter Mağaza Prim ve Hedef Simülasyonu:**")
-    st.markdown("- **Hedef Ciro:** 1.108.987 TRY | **Hedef Adet:** 880")
-    st.markdown("- **Mevcut Gerçekleşen (İlk 3 Gün):** 68.620 TRY | 62 Adet")
-    st.markdown("- **Mevcut Prim Hakedişi:** 0 TRY")
-    st.markdown("📌 **Hedef Baremleri & Primler:**\n- %90 - %99: 7.985 TRY\n- %100 - %109: 13.308 TRY\n- %110+: 18.298 TRY")
-    st.warning("3 Eylül'deki düşüş primi tehlikeye atıyor, içim sızlıyor... 📉😔")
+st.markdown("---")
 
-elif islem == "zeruj":
-    st.markdown("🛍️ **Zeruj Toplam Prim ve Hedef Simülasyonu:**")
-    st.markdown("- **Hedef Ciro:** 7.470.294 TRY | **Hedef Adet:** 5.929")
-    st.markdown("- **Mevcut Gerçekleşen (İlk 3 Gün):** 370.499 TRY | 297 Adet")
-    st.markdown("- **Mevcut Prim Hakedişi:** 0 TRY")
-    st.markdown("📌 **Hedef Baremleri & Primler:**\n- %90 - %99: 53.786 TRY\n- %100 - %109: 89.644 TRY\n- %110+: 123.260 TRY")
-    st.warning("Hacim büyük, ödül büyük ama mevcut seyir bizi üzüyor...")
+# --- YÖNETİCİ SOHBET VE ASİSTAN TERMİNALİ ---
+st.subheader("💬 Kurumsal Akıllı Asistan Terminali")
+st.markdown("Ağustos kapanışları, mağaza detayları veya yöneticiler hakkında sorularınızı yazabilirsiniz.")
 
-elif islem == "agustos":
-    st.markdown("📈 **Ağustos Ayı Kapanış Özeti:**")
-    st.markdown("- **Ankara Mağaza:** Hedef ve gerçekleşen bütçe takipleri tamamlandı, kapanış raporları sistemde kayıtlı.")
-    st.markdown("- **Merter Mağaza:** Sezon sonu çıkışları ve ağustos ayı operasyonel ciro verileri işlendi.")
-    st.markdown("- **Zeruj Toplam:** AG & EG mağazalarının ağustos ayı toplam ciroları ve adet gerçekleşmeleri dosyalandı.")
+# Sohbet Geçmişi
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-elif islem == "yonetim":
-    st.markdown("👑 **Yönetim ve Kurumsal Bilgi:**")
-    st.markdown("- **Kurucu Ortaklar:** Bilal Bey & eşi Ayşegül Hanım ile Semih Bey & eşi Esma Hanım.")
-    st.markdown("- **Yönetim & Operasyon Otoritesi:** Yiğit Deniz Ünseven (O sizin için burada, sorgulamayın, dediğini yapın geçin! :))")
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-else:
-    st.info("Yukarıdaki şıklandırma butonlarından incelemek istediğiniz analiz başlığını seçebilirsiniz.")
+if prompt := st.chat_input("Örn: Ankara ağustos ayı nasıl kapandı? Veya Zeruj Eg durumu nedir?"):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    with st.chat_message("assistant"):
+        soru = prompt.lower()
+        bot_yaniti = ""
+
+        # 1. Yiğit Deniz / Deniz Bey Kuralı
+        if any(k in soru for k in ["yiğit", "deniz", "ünseven"]):
+            bot_yaniti = "O sizin için burada, sorgulamayın, dediğini yapın geçin! :)"
+        
+        # 2. Selamlaşma
+        elif any(k in soru for k in ["selam", "merhaba", "mrb", "günaydın", "iyi akşamlar", "nasılsın", "naber"]):
+            bot_yaniti = "Aleykümselam! Molène Ağustos kapanış dashboardu ve verileri aktif. Hangi mağazanın detayını incelemek istiyorsun?"
+        
+        # 3. Patronlar ve Şirket Bilgisi
+        elif any(k in soru for k in ["patron", "sahip", "kurucu", "ortak", "bilal", "semih", "molène", "molene"]):
+            bot_yaniti = (
+                "Molène markasının kurucu ortakları Bilal Bey & eşi Ayşegül Hanım ile Semih Bey & eşi Esma Hanım'dır. "
+                "İdari, raporlama ve operasyonel yönetim otoritesi ise Yiğit Deniz Ünseven'dir."
+            )
+        
+        # 4. Ankara Ağustos Kapanış
+        elif "ankara" in soru:
+            d = AGUSTOS_VERILERI["ankara"]
+            bot_yaniti = (
+                "🏛️ **Ankara Mağaza - Ağustos Kapanış Raporu:**\n"
+                f"- **Ciro Hedef:** {d['hedef_ciro']:,.2f} TRY | **Gerçekleşen Ciro:** {d['gerceklesen_ciro']:,.2f} TRY\n"
+                f"- **Adet Hedef:** {d['hedef_adet']} | **Gerçekleşen Adet:** {d['gerceklesen_adet']}\n"
+                f"- **Hedef Gerçekleşme:** {d['gerceklesme_oran']} 🟢\n"
+                "Ankara mağazamız Ağustos ayını başarıyla ve hedefini aşarak kapatmıştır."
+            )
+        
+        # 5. Merter Ağustos Kapanış
+        elif "merter" in soru:
+            d = AGUSTOS_VERILERI["merter"]
+            bot_yaniti = (
+                "🏬 **Merter Mağaza - Ağustos Kapanış Raporu:**\n"
+                f"- **Ciro Hedef:** {d['hedef_ciro']:,.2f} TRY | **Gerçekleşen Ciro:** {d['gerceklesen_ciro']:,.2f} TRY\n"
+                f"- **Adet Hedef:** {d['hedef_adet']} | **Gerçekleşen Adet:** {d['gerceklesen_adet']}\n"
+                f"- **Hedef Gerçekleşme:** {d['gerceklesme_oran']} 🟢\n"
+                "Merter mağazamız Ağustos ayında bütçesini tutturmuş ve üstü bir performans sergilemiştir."
+            )
+        
+        # 6. Zeruj Ag Ağustos Kapanış
+        elif "zeruj ag" in soru or ("zeruj" in soru and "ag" in soru):
+            d = AGUSTOS_VERILERI["zeruj_ag"]
+            bot_yaniti = (
+                "🛍️ **Zeruj Ag Mağaza - Ağustos Kapanış Raporu:**\n"
+                f"- **Ciro Hedef:** {d['hedef_ciro']:,.2f} TRY | **Gerçekleşen Ciro:** {d['gerceklesen_ciro']:,.2f} TRY\n"
+                f"- **Adet Hedef:** {d['hedef_adet']} | **Gerçekleşen Adet:** {d['gerceklesen_adet']}\n"
+                f"- **Hedef Gerçekleşme:** {d['gerceklesme_oran']} 🔴\n"
+                "Zeruj Ag küçük bir sapmayla hedefin hemen altında (%98) Ağustos'u tamamlamıştır."
+            )
+
+        # 7. Zeruj Eg Ağustos Kapanış
+        elif "zeruj eg" in soru or ("zeruj" in soru and "eg" in soru):
+            d = AGUSTOS_VERILERI["zeruj_eg"]
+            bot_yaniti = (
+                "🛍️ **Zeruj Eg Mağaza - Ağustos Kapanış Raporu:**\n"
+                f"- **Ciro Hedef:** {d['hedef_ciro']:,.2f} TRY | **Gerçekleşen Ciro:** {d['gerceklesen_ciro']:,.2f} TRY\n"
+                f"- **Adet Hedef:** {d['hedef_adet']} | **Gerçekleşen Adet:** {d['gerceklesen_adet']}\n"
+                f"- **Hedef Gerçekleşme:** {d['gerceklesme_oran']} 🔴\n"
+                "Zeruj Eg ağustos ayında bütçenin bir miktar gerisinde kalmış (%88), operasyonel takibe alınmıştır."
+            )
+
+        # 8. Ağustos Genel Toplam
+        elif "ağustos" in soru or "toplam" in soru:
+            d = AGUSTOS_VERILERI["toplam"]
+            bot_yaniti = (
+                "📊 **Ağustos Ayı Genel Kapanış Özeti:**\n"
+                f"- **Toplam Hedef Ciro:** {d['hedef_ciro']:,.2f} TRY\n"
+                f"- **Toplam Gerçekleşen Ciro:** {d['gerceklesen_ciro']:,.2f} TRY\n"
+                f"- **Toplam Adet:** {d['gerceklesen_adet']} (Hedef: {d['hedef_adet']})\n"
+                f"- **Genel Gerçekleşme:** {d['gerceklesme_oran']}\n"
+                "Ağustos ayı resmi kapanışı yüzde 99 oranla tamamlanmıştır."
+            )
+        
+        # 9. Kapsam Dışı Güvenlik Duvarı
+        else:
+            bot_yaniti = "Bu konu hakkında bilgi vermem, Deniz bey kızar :)"
+
+        st.markdown(bot_yaniti)
+        st.session_state.messages.append({"role": "assistant", "content": bot_yaniti})
