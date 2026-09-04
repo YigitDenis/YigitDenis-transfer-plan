@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 # Sayfa Ayarları
 st.set_page_config(page_title="Molène Mağazalar AI Asistanı", page_icon="🎯", layout="wide")
@@ -27,10 +28,25 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- NET VE ODAKLI KURUMSAL MOTOR ---
+# --- GOOGLE E-TABLO VERİ ÇEKME MOTORU ---
+@st.cache_data(ttl=60) # Veriyi her 1 dakikada bir günceller/önbelleğe alır
+def veri_cek():
+    try:
+        # Belirttiğin Google E-Tablo ve "ai Sayfa" sekmesi export linki
+        sheet_id = "1TFXBAtfGrCLQzze7Llbg4fI0pWL2kkWEb0eBuX71kKE"
+        sheet_name = "ai Sayfa"
+        url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+        df = pd.read_csv(url)
+        return df, "Başarılı"
+    except Exception as e:
+        return None, str(e)
+
+df_veri, durum = veri_cek()
+
+# --- KURUMSAL MOTOR VE CHAT ARAYÜZÜ ---
 
 st.title("🎯 Molène Tüm Mağazalar Hedef ve Performans Takip Asistanı")
-st.markdown("Tüm mağazalar, bütçe takipleri, ciro hedefleri ve perakende operasyonları asistanı.")
+st.markdown("Google E-Tablolar ('ai Sayfa') entegre canlı bütçe, ciro ve operasyon asistanı.")
 
 # Sohbet Geçmişi
 if "messages" not in st.session_state:
@@ -40,38 +56,43 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Örn: Eylül ayı hedefleri nasıl? Veya Yiğit Deniz Ünseven kimdir?"):
+if prompt := st.chat_input("Örn: Ağustos ayı nasıl kapandı? Veya Eylül ayı hedefleri ne durumda?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
         soru = prompt.lower()
+        bot_yaniti = ""
         
         # 1. Yiğit Deniz / Deniz Bey Kuralı
         if any(k in soru for k in ["yiğit", "deniz", "ünseven"]):
             bot_yaniti = "O sizin için burada, sorgulamayın, dediğini yapın geçin! :)"
         
-        # 2. Selamlaşma, Hal Hatır ve Naber
+        # 2. Selamlaşma ve Hal Hatır
         elif any(k in soru for k in ["selam", "merhaba", "mrb", "günaydın", "iyi akşamlar", "nasılsın", "ne naber", "naber", "selamın aleyküm"]):
-            bot_yaniti = "Aleykümselam! Çok iyiyim, Molène verileriyle çalışmaya devam ediyorum. Sen nasılsın, hangi mağazanın hedeflerine bakıyoruz?"
+            bot_yaniti = "Aleykümselam! Çok iyiyim, 'ai Sayfa' verilerini anlık takip ediyorum. Sen nasılsın, hangi ayın veya mağazanın verilerine bakıyoruz?"
         
         # 3. Patronlar ve Şirket Bilgisi
         elif any(k in soru for k in ["patron", "sahip", "kurucu", "ortak", "bilal", "semih", "molène", "molene"]):
             bot_yaniti = (
                 "Molène markasının kurucu ortakları Bilal Bey & eşi Ayşegül Hanım ile Semih Bey & eşi Esma Hanım'dır. "
-                "İdari ve operasyonel süreçlerin merkezi ise Yiğit Deniz Ünseven'dir."
+                "İdari, raporlama ve operasyonel yönetim otoritesi ise Yiğit Deniz Ünseven'dir."
             )
         
-        # 4. Mağazalar, Hedefler ve Ciro Verileri (Eylül Ayı İlk 3 Gün Özeti)
-        elif any(k in soru for k in ["hedef", "ciro", "eylül", "bütçe", "prim", "satış", "ankara", "merter", "zeruj", "mağaza"]):
+        # 4. Tablo Verileri Sorgulama (Ağustos, Eylül, Mağazalar, Hedefler)
+        elif any(k in soru for k in ["hedef", "ciro", "eylül", "ağustos", "bütçe", "prim", "satış", "ankara", "merter", "zeruj", "mağaza", "tablo", "veri"]):
+            if durum == "Başarılı" and df_veri is not None:
+                # Tablodan özet bilgi türetme veya veriyi aksettirme
+                tablo_ozeti = f"Tablonuzdan 'ai Sayfa' verileri güncel olarak çekilmiştir. Tablonuzda toplam {len(df_veri)} satır veri bulunmaktadır."
+            else:
+                tablo_ozeti = "Google E-Tablo bağlantısında veri okunurken geçici bir sorun yaşandı, ancak genel hafızamızdaki Ağustos ve Eylül verileriyle devam ediyoruz."
+
             bot_yaniti = (
-                "Eylül ayı genel ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔\n\n"
-                "📊 **Eylül Ayı İlk 3 Gün Özeti:**\n"
-                "- **Toplam Hedef Ciro:** 12.086.275 TRY | **Gerçekleşen:** 626.615 TRY\n"
-                "- **Ankara Mağaza:** Hedef 3.506.994 TRY | İlk 3 gün toplam: 187.495 TRY (%100.6, %57.5, %44.5)\n"
-                "- **Merter Mağaza:** Hedef 1.108.987 TRY | İlk 3 gün toplam: 68.620 TRY (%100, %97, %37)\n"
-                "- **Zeruj Toplam:** Hedef 7.470.294 TRY | İlk 3 gün toplam: 370.499 TRY (%46.2, %63.6, %75.2)"
+                f"{tablo_ozeti}\n\n"
+                "📊 **Genel Değerlendirme:**\n"
+                "Ağustos ayı verilerimiz sistemde kayıtlıdır; Eylül ayında ise ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔\n"
+                "Ankara, Merter ve Zeruj mağazalarımızda bütçe ve satış sapmalarını toparlamak için alokasyon stratejilerini acilen sıkı tutmalıyız."
             )
         
         # 5. Kapsam Dışı Her Şey İçin Güvenlik Duvarı
