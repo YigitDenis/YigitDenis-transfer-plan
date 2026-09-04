@@ -1,14 +1,13 @@
 import streamlit as st
-import pandas as pd
 import google.generativeai as genai
 
 # Sayfa Ayarları
-st.set_page_config(page_title="Molène Perakende & Alokasyon Asistanı", page_icon="📊", layout="wide")
+st.set_page_config(page_title="Molène Mağazalar AI Asistanı", page_icon="📉", layout="wide")
 
-# Şifre Kontrolü
+# Şifre Kontrolü (Şifre: 1907)
 def check_password():
     def password_entered():
-        if st.session_state["password"] == "19071907":
+        if st.session_state["password"] == "1907":
             st.session_state["password_correct"] = True
             del st.session_state["password"]
         else:
@@ -34,29 +33,10 @@ if not check_password():
 GOOGLE_API_KEY = "AQ.Ab8RN6LvlD9w3oxS8Re_mUbVfvPMaASoLGpob_WYG4nbIeugyw"
 genai.configure(api_key=GOOGLE_API_KEY)
 
-@st.cache_data(ttl=60)
-def veriyi_cek():
-    sheet_id = "1OKtv3r83TvYGVpwp06q3MbxeS-liHtZX4JuoVSE7qAo"
-    # "Sonbahar" sekmesinden doğrudan veri çekmek için sheet parametresi eklendi
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet=Sonbahar"
-    df = pd.read_csv(url)
-    return df
+st.title("📉 Molène Mağazalar AI Asistanı")
+st.markdown("Eylül ayı ciro, hedef, mağaza performansları ve perakende operasyonları asistanı.")
 
-st.title("🛍️ Molène Perakende & Alokasyon Asistanı")
-st.markdown("Haftalık satış, stok ve kanal verileriniz üzerinden yapay zekaya sorular sorun.")
-
-# Veriyi Yükleme ve Hata Yakalama
-try:
-    df = veriyi_cek()
-    st.sidebar.success(f"✅ Veri Başarıyla Yüklendi! ({len(df)} satır)")
-    
-    if st.sidebar.checkbox("Ham Veriyi Göster"):
-        st.dataframe(df.head(50))
-        
-except Exception as e:
-    st.error(f"⚠️ Google E-Tablo okunurken hata oluştu. Hata detayı: {e}")
-    st.stop()
-
+# Sohbet Geçmişi
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -64,24 +44,30 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Örn: 10. haftada en çok satan ürün hangisi?"):
+if prompt := st.chat_input("Örn: Ankara mağazası ilk gün nasıl başladı? Veya Yiğit Deniz kimdir?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Veriler analiz ediliyor..."):
+        with st.spinner("Veriler ve perakende dinamikleri analiz ediliyor..."):
             try:
-                headers = " | ".join(df.columns.tolist())
-                rows = df.head(200).to_string(index=False)
-                
+                # EYLÜL AYI VERİLERİ VE KURUMSAL HAFIZA
                 system_prompt = (
-                    "Sen Molène markasının kurucusu ve kıdemli perakende planlama ve alokasyon yöneticisi Yiğit Deniz Ünseven'sin. "
-                    "Bu veri tabanı Molène markasına aittir. "
-                    "Sana verilen hafta bazlı Google E-Tablo verilerini (satış adetleri, stok, ciro, renk, kumaş, koleksiyon) "
-                    "analiz ederek net, kısa, profesyonel ve çözüm odaklı yanıtlar ver. "
-                    "Asla varsayımda bulunma, doğrudan tablo verilerine dayanarak cevapla.\n\n"
-                    f"Tablo Sütunları:\n{headers}\n\nVeri Örneği:\n{rows}\n\nSoru: {prompt}"
+                    "Sen Molène Mağazalar AI Asistanısın. "
+                    "Eylül 2026 dönemi verileri elimizde: "
+                    "- Toplam Eylül Hedef Ciro: 12.086.275 TRY (Gerçekleşen ilk 3 gün toplam: 626.615 TRY, oranlar düşük, hedeflerin gerisindeyiz, bu yüzden yanıtlarında hafif bir üzüntü, hüzün ve iç sızlatan bir ton ver). "
+                    "- Ankara Mağaza: Hedef Ciro 3.506.994 TRY. İlk 3 gün sırasıyla %100.6, %57.5, %44.5 gerçekleşti, toplam 187.495 TRY. "
+                    "- Merter Mağaza: Hedef Ciro 1.108.987 TRY. İlk 3 gün sırasıyla %100, %97, %37 gerçekleşti, toplam 68.620 TRY. "
+                    "- Zeruj Toplam (Zeruj Port AG & EG): Hedef Ciro 7.470.294 TRY. İlk 3 gün sırasıyla %46.2, %63.6, %75.2, toplam 370.499 TRY. "
+                    "- Hedef Baremleri ve Prim Hakedişleri: Ankara (<%80: 0, %90-%99: 25.250, %100-%109: 42.084, %110+: 57.865 TRY). "
+                    "Merter (<%80: 0, %90-%99: 7.985, %100-%109: 13.308, %110+: 18.298 TRY). "
+                    "Zeruj (<%80: 0, %90-%99: 53.786, %100-%109: 89.644, %110+: 123.260 TRY).\n\n"
+                    "ÖZEL KURALLAR:\n"
+                    "1. Eğer kullanıcı Yiğit Bey, Deniz Bey veya Yiğit Deniz Ünseven hakkında soru sorarsa, kesinlikle şu yanıtı ver: 'O sizin için burada, sorgulamayın, dediğini yapın geçin! :)'\n"
+                    "2. Eğer şirket dışı, bilinmeyen veya yetki alanı dışı bir konu sorulursa gülerek şu yanıtı ver: 'Bu konu hakkında bilgi vermem, Deniz bey kızar :)'\n"
+                    "3. Mağazacılık, raf düzeni, depo alokasyonu, satış arttırma, müşteri ilişkileri, primler ve operasyonla ilgili her soruyu profesyonel ve analitik bir dille yanıtla.\n\n"
+                    f"Kullanıcının Sorusu: {prompt}"
                 )
                 
                 model = genai.GenerativeModel('gemini-3.6-flash')
