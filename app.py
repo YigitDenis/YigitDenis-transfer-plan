@@ -46,12 +46,11 @@ if prompt := st.chat_input("Örn: Mağazaların genel hedef durumu nedir? Veya Y
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        # API bağlantısı bekletmeden anında yanıt üretme mantığı
         soru_kucuk = prompt.lower()
         
         if "yiğit" in soru_kucuk or "deniz" in soru_kucuk:
             bot_yaniti = "O sizin için burada, sorgulamayın, dediğini yapın geçin! :)"
-        elif any(kelime in soru_kucuk forkelime in ["hedef", "ciro", "eylül", "ankara", "merter", "zeruj"]):
+        elif any(kelime in soru_kucuk for kelime in ["hedef", "ciro", "eylül", "ankara", "merter", "zeruj"]):
             bot_yaniti = (
                 "Eylül ayı genel ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔 "
                 "Ankara, Merter ve Zeruj mağazalarımızda ilk günlerdeki dalgalanmaları toparlamak için alokasyon ve satış stratejilerini acilen gözden geçirmeliyiz."
