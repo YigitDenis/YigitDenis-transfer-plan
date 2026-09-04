@@ -30,7 +30,6 @@ if not check_password():
 
 # --- ŞİFRE DOĞRUYSA ÇALIŞACAK UYGULAMA ---
 
-# Kendi geçerli API anahtarını tırnak içinde buraya yazmalısın
 GOOGLE_API_KEY = "BURAYA_KENDİ_GERÇEK_APİ_ANAHTARINI_YAZ"
 genai.configure(api_key=GOOGLE_API_KEY)
 
@@ -51,7 +50,7 @@ if prompt := st.chat_input("Örn: Mağazaların genel hedef durumu nedir? Veya Y
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Tüm mağaza verileri ve perakende dinamikleri analiz ediliyor..."):
+        with st.spinner("Analiz ediliyor..."):
             try:
                 system_prompt = (
                     "Sen Molène Mağazalar AI Asistanısın. "
@@ -64,7 +63,8 @@ if prompt := st.chat_input("Örn: Mağazaların genel hedef durumu nedir? Veya Y
                     f"Kullanıcının Sorusu: {prompt}"
                 )
                 
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                # Daha kararlı ve hızlı çalışan model tanımı
+                model = genai.GenerativeModel('gemini-1.5-flash-latest')
                 response = model.generate_content(system_prompt)
                 
                 bot_yaniti = response.text
@@ -72,5 +72,5 @@ if prompt := st.chat_input("Örn: Mağazaların genel hedef durumu nedir? Veya Y
                 st.session_state.messages.append({"role": "assistant", "content": bot_yaniti})
                 
             except Exception as e:
-                hata_mesaji = f"Bir hata oluştu: {str(e)}"
+                hata_mesaji = f"Bağlantı hatası: {str(e)}"
                 st.error(hata_mesaji)
