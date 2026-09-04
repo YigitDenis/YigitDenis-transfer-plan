@@ -10,23 +10,20 @@ def check_password():
     def password_entered():
         if st.session_state["password"] == "19071907":
             st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Şifreyi hafızadan sil
+            del st.session_state["password"]
         else:
             st.session_state["password_correct"] = False
 
     if "password_correct" not in st.session_state:
-        # İlk açılışta şifre iste
         st.subheader("🔒 Kurumsal Giriş")
         st.text_input("Yönetici Şifresini Giriniz:", type="password", on_change=password_entered, key="password")
         return False
     elif not st.session_state["password_correct"]:
-        # Yanlış şifre
         st.subheader("🔒 Kurumsal Giriş")
         st.text_input("Yönetici Şifresini Giriniz:", type="password", on_change=password_entered, key="password")
         st.error("😕 Şifre yanlış.")
         return False
     else:
-        # Doğru şifre
         return True
 
 if not check_password():
@@ -37,7 +34,6 @@ if not check_password():
 # Gemini API Yapılandırması
 GOOGLE_API_KEY = "AQ.Ab8RN6IrttZSm48twAcllBpiho2z5amf3tJLmmPvyns8Wcl8yQ"
 genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Google Sheets Verisini Çekme Fonksiyonu
 @st.cache_data(ttl=600)
@@ -87,11 +83,12 @@ if prompt := st.chat_input("Örn: Hangi ürünün stoğu az kalmış?"):
                     "Sen kıdemli bir perakende planlama ve alokasyon yöneticisisin. "
                     "Sana verilen Google E-Tablo verilerini analiz ederek net, kısa, profesyonel ve çözüm odaklı yanıtlar ver. "
                     "Asla varsayımda bulunma, doğrudan tablo verilerine dayanarak cevapla.\n\n"
-                    f"Tablo Sütunları:\n{headers}\n\nVeri Örneği:\n{rows}"
+                    f"Tablo Sütunları:\n{headers}\n\nVeri Örneği:\n{rows}\n\nSoru: {prompt}"
                 )
                 
-                chat_session = model.start_chat(history=[])
-                response = chat_session.send_message(f"{system_prompt}\n\nSoru: {prompt}")
+                # Güncel Gemini model çağrısı
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                response = model.generate_content(system_prompt)
                 
                 bot_yaniti = response.text
                 st.markdown(bot_yaniti)
