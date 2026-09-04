@@ -31,11 +31,9 @@ if not check_password():
 
 # --- ŞİFRE DOĞRUYSA ÇALIŞACAK UYGULAMA ---
 
-# Gemini API Yapılandırması
 GOOGLE_API_KEY = "AQ.Ab8RN6LvlD9w3oxS8Re_mUbVfvPMaASoLGpob_WYG4nbIeugyw"
 genai.configure(api_key=GOOGLE_API_KEY)
 
-# Google Sheets Verisini Çekme Fonksiyonu
 @st.cache_data(ttl=600)
 def veriyi_cek():
     sheet_id = "1OKtv3r83TvYGVpwp06q3MbxeS-liHtZX4JuoVSE7qAo"
@@ -43,11 +41,9 @@ def veriyi_cek():
     df = pd.read_csv(url)
     return df
 
-# Arayüz Tasarımı
 st.title("🛍️ Molène Perakende & Alokasyon Asistanı")
 st.markdown("Günlük satış, stok ve kanal verileriniz üzerinden yapay zekaya sorular sorun.")
 
-# Veriyi Yükleme
 try:
     df = veriyi_cek()
     st.sidebar.success(f"✅ Veri Başarıyla Yüklendi! ({len(df)} satır)")
@@ -59,7 +55,6 @@ except Exception as e:
     st.error(f"Veri okunurken hata oluştu: {e}")
     st.stop()
 
-# Sohbet Geçmişi
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -67,7 +62,6 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Kullanıcıdan Soru Alma
 if prompt := st.chat_input("Örn: Hangi ürünün stoğu az kalmış?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -86,7 +80,8 @@ if prompt := st.chat_input("Örn: Hangi ürünün stoğu az kalmış?"):
                     f"Tablo Sütunları:\n{headers}\n\nVeri Örneği:\n{rows}\n\nSoru: {prompt}"
                 )
                 
-                model = genai.GenerativeModel('gemini-1.5-flash')
+                # Model güncellendi
+                model = genai.GenerativeModel('gemini-2.5-flash')
                 response = model.generate_content(system_prompt)
                 
                 bot_yaniti = response.text
