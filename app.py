@@ -34,16 +34,18 @@ if not check_password():
 GOOGLE_API_KEY = "AQ.Ab8RN6LvlD9w3oxS8Re_mUbVfvPMaASoLGpob_WYG4nbIeugyw"
 genai.configure(api_key=GOOGLE_API_KEY)
 
-@st.cache_data(ttl=600)
+@st.cache_data(ttl=60)
 def veriyi_cek():
     sheet_id = "1OKtv3r83TvYGVpwp06q3MbxeS-liHtZX4JuoVSE7qAo"
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0"
+    # "Sonbahar" sekmesinden doğrudan veri çekmek için sheet parametresi eklendi
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet=Sonbahar"
     df = pd.read_csv(url)
     return df
 
 st.title("🛍️ Molène Perakende & Alokasyon Asistanı")
 st.markdown("Haftalık satış, stok ve kanal verileriniz üzerinden yapay zekaya sorular sorun.")
 
+# Veriyi Yükleme ve Hata Yakalama
 try:
     df = veriyi_cek()
     st.sidebar.success(f"✅ Veri Başarıyla Yüklendi! ({len(df)} satır)")
@@ -52,7 +54,7 @@ try:
         st.dataframe(df.head(50))
         
 except Exception as e:
-    st.error(f"Veri okunurken hata oluştu: {e}")
+    st.error(f"⚠️ Google E-Tablo okunurken hata oluştu. Hata detayı: {e}")
     st.stop()
 
 if "messages" not in st.session_state:
