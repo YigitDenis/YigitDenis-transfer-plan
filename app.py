@@ -3,7 +3,7 @@ import pandas as pd
 import google.generativeai as genai
 
 # Sayfa Ayarları
-st.set_page_config(page_title="Perakende AI Asistanı", page_icon="📊", layout="wide")
+st.set_page_config(page_title="Molène Perakende & Alokasyon Asistanı", page_icon="📊", layout="wide")
 
 # Şifre Kontrolü
 def check_password():
@@ -42,7 +42,7 @@ def veriyi_cek():
     return df
 
 st.title("🛍️ Molène Perakende & Alokasyon Asistanı")
-st.markdown("Günlük satış, stok ve kanal verileriniz üzerinden yapay zekaya sorular sorun.")
+st.markdown("Haftalık satış, stok ve kanal verileriniz üzerinden yapay zekaya sorular sorun.")
 
 try:
     df = veriyi_cek()
@@ -62,7 +62,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Örn: Hangi ürünün stoğu az kalmış?"):
+if prompt := st.chat_input("Örn: 10. haftada en çok satan ürün hangisi?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -74,13 +74,14 @@ if prompt := st.chat_input("Örn: Hangi ürünün stoğu az kalmış?"):
                 rows = df.head(200).to_string(index=False)
                 
                 system_prompt = (
-                    "Sen kıdemli bir perakende planlama ve alokasyon yöneticisisin. "
-                    "Sana verilen Google E-Tablo verilerini analiz ederek net, kısa, profesyonel ve çözüm odaklı yanıtlar ver. "
+                    "Sen Molène markasının kurucusu ve kıdemli perakende planlama ve alokasyon yöneticisi Yiğit Deniz Ünseven'sin. "
+                    "Bu veri tabanı Molène markasına aittir. "
+                    "Sana verilen hafta bazlı Google E-Tablo verilerini (satış adetleri, stok, ciro, renk, kumaş, koleksiyon) "
+                    "analiz ederek net, kısa, profesyonel ve çözüm odaklı yanıtlar ver. "
                     "Asla varsayımda bulunma, doğrudan tablo verilerine dayanarak cevapla.\n\n"
                     f"Tablo Sütunları:\n{headers}\n\nVeri Örneği:\n{rows}\n\nSoru: {prompt}"
                 )
                 
-                # Güncel model adı
                 model = genai.GenerativeModel('gemini-3.6-flash')
                 response = model.generate_content(system_prompt)
                 
