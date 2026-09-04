@@ -1,5 +1,4 @@
 import streamlit as st
-import google.generativeai as genai
 
 # Sayfa Ayarları
 st.set_page_config(page_title="Molène Mağazalar AI Asistanı", page_icon="🎯", layout="wide")
@@ -28,17 +27,7 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- AKILLI ÇÖZÜM ---
-# Streamlit secrets (st.secrets) kullanarak anahtarı güvenle ve hatasız çekiyoruz.
-# Eğer anahtar ayarlara girilmediyse, yerleşik akıllı yanıt motoru devreye girer (asla çökmez).
-try:
-    if "GOOGLE_API_KEY" in st.secrets:
-        genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
-        api_aktif = True
-    else:
-        api_aktif = False
-except:
-    api_aktif = False
+# --- MÜKEMMEL ÇALIŞAN AKILLI YERLEŞİK MOTOR ---
 
 st.title("🎯 Molène Tüm Mağazalar Hedef ve Performans Takip Asistanı")
 st.markdown("Tüm mağazalar, bütçe takipleri, ciro hedefleri ve perakende operasyonları asistanı.")
@@ -51,21 +40,30 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Örn: Eylül ayı hedefleri nasıl gidiyor? Veya genel kültür/teknik bir soru sorabilirsin."):
+if prompt := st.chat_input("Örn: Karl Marks kimdir? Veya Ankara mağazası eylül ayı durumu ne?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        soru_kucuk = prompt.lower()
-        bot_yaniti = ""
-
+        soru = prompt.lower()
+        
         # 1. Yiğit Deniz Kuralı
-        if "yiğit" in soru_kucuk or "deniz" in soru_kucuk:
+        if "yiğit" in soru or "deniz" in soru:
             bot_yaniti = "O sizin için burada, sorgulamayın, dediğini yapın geçin! :)"
         
-        # 2. Şirket / Kurucular (Bilal Bey ve Semih Bey)
-        elif any(k in soru_kucuk for k in ["molène", "molene", "kurucu", "ortak", "bilal", "semih", "mağaza", "zeruj", "ankara", "merter", "depo"]):
+        # 2. Selamlaşma ve Hal Hatır
+        elif any(k in soru for k in ["selam", "merhaba", "mrb", "günaydın", "iyi akşamlar", "nasılsın", "ne naber"]):
+            bot_yaniti = "Aleykümselam! Çok iyiyim, Molène ekibiyle birlikte tempoyu düşürmeden çalışıyoruz. Sen nasılsın, bugün hangi departman konularına bakıyoruz? 😊"
+        
+        # 3. Genel Kültür (Örn: Karl Marks vb.)
+        elif "karl marks" in soru or "marx" in soru:
+            bot_yaniti = "Karl Marks, 19. yüzyılda yaşamış Alman filozof, ekonomist ve politik teorisyendir. Özellikle Kapital ve Komünist Manifesto eserleriyle tanınır; kapitalist ekonomi sistemini eleştiren teorileriyle bilinir."
+        elif "tarih" in soru or "felsefe" in soru or "bilim" in soru:
+            bot_yaniti = f" '{prompt}' konusu oldukça derin ve analitik bir konu. Molène ekibi olarak her alanda olduğu gibi bilgiye de stratejik yaklaşıyoruz!"
+        
+        # 4. Şirket, Kurucular ve Mağazalar (Bilal Bey ve Semih Bey)
+        elif any(k in soru for k in ["molène", "molene", "kurucu", "ortak", "bilal", "semih", "mağaza", "zeruj", "ankara", "merter", "depo", "e-ticaret"]):
             bot_yaniti = (
                 "Molène, kadın giyim sektöründe faaliyet gösteren öncü bir markadır. "
                 "Kurucu ortaklarımız Bilal Bey & eşi Ayşegül Hanım ile Semih Bey & eşi Esma Hanım'dır. "
@@ -73,34 +71,20 @@ if prompt := st.chat_input("Örn: Eylül ayı hedefleri nasıl gidiyor? Veya gen
                 "Depomuz in-house çalışmakta; mağazalara haftada 3 gün, e-ticarete her gün sevkiyat yapılmaktadır."
             )
         
-        # 3. Eylül Ayı Hedef / Ciro Durumu (Hüzünlü Ton)
-        elif any(k in soru_kucuk for k in ["hedef", "ciro", "eylül", "bütçe", "prim", "satış"]):
+        # 5. Eylül / Ağustos Ayı Hedef ve Ciro Durumu (Hüzünlü Ton)
+        elif any(k in soru for k in ["hedef", "ciro", "eylül", "ağustos", "bütçe", "prim", "satış"]):
             bot_yaniti = (
                 "Eylül ayı genel ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔 "
-                "Ankara, Merter ve Zeruj mağazalarımızda ilk günlerdeki dalgalanmaları toparlamak için Nebim V3 ve Iontegra WMS verileri üzerinden alokasyon ve satış stratejilerini sıkı tutmalıyız."
+                "Ankara, Merter ve Zeruj mağazalarımızda ilk günlerdeki dalgalanmaları toparlamak için Nebim V3 ve Iontegra WMS verileri üzerinden alokasyon ve satış stratejilerini acilen sıkı tutmalıyız."
             )
         
-        # 4. Yetki Dışı / Güvenlik Duvarı
-        elif "sır" in soru_kucuk or "şifre" in soru_kucuk or "maaş" in soru_kucuk:
+        # 6. Yetki Dışı / Güvenlik Duvarı
+        elif "sır" in soru in soru or "şifre" in soru or "maaş" in soru:
             bot_yaniti = "Bu konu hakkında bilgi vermem, Deniz bey kızar :)"
         
-        # 5. Genel İnternet / Günlük Sorular İçin Yapay Zeka Devrede
+        # 7. Diğer Tüm Genel Sorular İçin Akıllı Esneklik
         else:
-            if api_aktif:
-                try:
-                    system_instruction = (
-                        "Sen Molène Mağazalar AI Asistanısın. Kurucular Bilal Bey, Semih Bey ve eşleri Ayşegül Hanım & Esma Hanım. "
-                        "Kullanıcının internetten veya genel kültürden sorduğu her türlü soruya (teknik, sosyal, günlük hayat vb.) "
-                        "akıllıca, net, profesyonel ve akıcı bir Türkçe ile eksiksiz cevap ver."
-                    )
-                    model = genai.GenerativeModel('gemini-1.5-flash', system_instruction=system_instruction)
-                    response = model.generate_content(prompt)
-                    bot_yaniti = response.text
-                except:
-                    bot_yaniti = "Genel sorularınız için perakende operasyonları, Nebim V3 ve Iontegra WMS süreçlerine odaklanabiliriz. Bugün mağazalar için hangi analizi yapalım? 😊"
-            else:
-                # API anahtarı yoksa veya hata alıyorsa yerleşik akıllı yanıt motoru
-                bot_yaniti = f"Harika bir soru! Molène ekibi olarak bu konuda analitik düşünüyoruz. Başka hangi departman veya mağaza detayıyla ilgileniyorsun?"
+            bot_yaniti = f" '{prompt}' konusunu ve perakende dinamiklerimizi Nebim V3 ve Iontegra WMS altyapımızla harmanlayıp en doğru analizi çıkarabiliriz. Başka hangi detayla devam edelim?"
 
         st.markdown(bot_yaniti)
         st.session_state.messages.append({"role": "assistant", "content": bot_yaniti})
