@@ -1,7 +1,7 @@
 import streamlit as st
 
 # Sayfa Ayarları
-st.set_page_config(page_title="Molène Mağazalar AI Asistanı", page_icon="🎯", layout="wide")
+st.set_page_config(page_title="Molène Mağazalar Prim ve Hedef Simülasyonu", page_icon="🎯", layout="wide")
 
 # Şifre Kontrolü (Şifre: 1907)
 def check_password():
@@ -27,10 +27,32 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- VERİ TABANI VE MOTOR ---
+# --- PRİM HESAPLAMA MOTORU ---
+def prim_hesapla(magaza, gerceklesen_ciro, hedef_ciro):
+    oran = (gerceklesen_ciro / hedef_ciro) * 100 if hedef_ciro > 0 else 0
+    
+    if magaza == "ankara":
+        if oran >= 110: prim = 57865
+        elif oran >= 100: prim = 42084
+        elif oran >= 90: prim = 25250
+        else: prim = 0
+    elif magaza == "merter":
+        if oran >= 110: prim = 18298
+        elif oran >= 100: prim = 13308
+        elif oran >= 90: prim = 7985
+        else: prim = 0
+    elif magaza == "zeruj":
+        if oran >= 110: prim = 123260
+        elif oran >= 100: prim = 89644
+        elif oran >= 90: prim = 53786
+        else: prim = 0
+    else:
+        prim = 0
+        
+    return oran, prim
 
-st.title("🎯 Molène Tüm Mağazalar Hedef ve Performans Takip Asistanı")
-st.markdown("Ağustos ve Eylül ayı bütçe, ciro ve mağaza operasyonları asistanı.")
+st.title("🎯 Molène Mağaza Performans ve Prim Simülasyonu")
+st.markdown("Mağaza bazlı ciro hedefleri, gerçekleşmeler ve anlık prim hakediş simülasyonu.")
 
 # Sohbet Geçmişi
 if "messages" not in st.session_state:
@@ -40,7 +62,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Örn: Ağustos ayı toplamı kaç? Veya Eylül ayı hedefleri ne durumda?"):
+if prompt := st.chat_input("Örn: Ankara mağazası prim durumu nedir? Veya Zeruj hedefe ulaşırsa ne alır?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -49,49 +71,82 @@ if prompt := st.chat_input("Örn: Ağustos ayı toplamı kaç? Veya Eylül ayı 
         soru = prompt.lower()
         bot_yaniti = ""
 
-        # 1. Yiğit Deniz / Deniz Bey Kuralı
+        # 1. Yiğit Deniz Kuralı
         if any(k in soru for k in ["yiğit", "deniz", "ünseven"]):
             bot_yaniti = "O sizin için burada, sorgulamayın, dediğini yapın geçin! :)"
         
-        # 2. Selamlaşma
-        elif any(k in soru for k in ["selam", "merhaba", "mrb", "günaydın", "iyi akşamlar", "nasılsın", "ne naber", "naber"]):
-            bot_yaniti = "Aleykümselam! Çok iyiyim, Ağustos ve Eylül ayı verilerini inceliyorum. Sen nasılsın, hangi döneme bakıyoruz?"
-        
-        # 3. Patronlar ve Şirket Bilgisi
+        # 2. Patronlar ve Şirket Bilgisi
         elif any(k in soru for k in ["patron", "sahip", "kurucu", "ortak", "bilal", "semih", "molène", "molene"]):
             bot_yaniti = (
                 "Molène markasının kurucu ortakları Bilal Bey & eşi Ayşegül Hanım ile Semih Bey & eşi Esma Hanım'dır. "
                 "İdari, raporlama ve operasyonel yönetim otoritesi ise Yiğit Deniz Ünseven'dir."
             )
         
-        # 4. Ağustos Ayı Verileri
-        elif "ağustos" in soru:
+        # 3. Ankara Prim Simülasyonu
+        elif "ankara" in soru:
+            hedef = 3506994
+            gerceklesen = 187495  # İlk 3 günlük mevcut
+            oran, prim = prim_hesapla("ankara", gerceklesen, hedef)
+            
+            # Simülasyon: Eğer %100 yapılırsa
+            prim_100 = 42084
+            prim_110 = 57865
+            
             bot_yaniti = (
-                "📈 **Ağustos Ayı Mağaza Performans ve Ciro Özeti:**\n\n"
-                "- **Ankara Mağaza Ağustos:** Hedef ve gerçekleşen bütçe takipleri tamamlandı, kapanış raporları sistemde kayıtlı.\n"
-                "- **Merter Mağaza Ağustos:** Sezon sonu çıkışları ve ağustos ayı operasyonel ciro verileri işlendi.\n"
-                "- **Zeruj Toplam Ağustos:** AG & EG mağazalarının ağustos ayı toplam ciroları ve adet gerçekleşmeleri dosyalandı.\n\n"
-                "Ağustos kapanış verilerinin detayları için ilgili rapor sekmesini inceleyebilirsin."
+                "🏛️ **Ankara Mağaza Prim ve Hedef Durumu:**\n"
+                f"- **Hedef Ciro:** {hedef:,} TRY\n"
+                f"- **Mevcut Gerçekleşen:** {gerceklesen:,} TRY (Gerçekleşme Oranı: %{oran:.1f})\n"
+                f"- **Mevcut Prim Hakedişi:** {prim:,} TRY\n\n"
+                "📌 **Simülasyon / Hedef Baremleri:**\n"
+                f"- %90 - %99 aralığında: 25.250 TRY\n"
+                f"- %100 - %109 aralığında: {prim_100:,} TRY\n"
+                f"- %110 ve üzeri: {prim_110:,} TRY\n"
+                "Hedeflerin çok gerisindeyiz, ekibin primi hak etmesi için ciroyu acilen patlatmamız gerekiyor! 📉😔"
             )
-        
-        # 5. Eylül Ayı Verileri
-        elif "eylül" in soru:
+
+        # 4. Merter Prim Simülasyonu
+        elif "merter" in soru:
+            hedef = 1108987
+            gerceklesen = 68620
+            oran, prim = prim_hesapla("merter", gerceklesen, hedef)
+            
             bot_yaniti = (
-                "📉 **Eylül Ayı İlk 3 Gün Durumu:** Ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔\n\n"
-                "- **Toplam Hedef:** 12.086.275 TRY (9.592 Adet) | **Gerçekleşen:** 626.615 TRY (525 Adet)\n"
-                "- **Ankara Mağaza:** Hedef 3.506.994 TRY | İlk 3 gün toplam: 187.495 TRY (166 Adet)\n"
-                "- **Merter Mağaza:** Hedef 1.108.987 TRY | İlk 3 gün toplam: 68.620 TRY (62 Adet)\n"
-                "- **Zeruj Toplam:** Hedef 7.470.294 TRY | İlk 3 gün toplam: 370.499 TRY (297 Adet)"
+                "🏬 **Merter Mağaza Prim ve Hedef Durumu:**\n"
+                f"- **Hedef Ciro:** {hedef:,} TRY\n"
+                f"- **Mevcut Gerçekleşen:** {gerceklesen:,} TRY (Gerçekleşme Oranı: %{oran:.1f})\n"
+                f"- **Mevcut Prim Hakedişi:** {prim:,} TRY\n\n"
+                "📌 **Simülasyon / Hedef Baremleri:**\n"
+                "- %90 - %99: 7.985 TRY\n"
+                "- %100 - %109: 13.308 TRY\n"
+                "- %110+: 18.298 TRY\n"
+                "3 Eylül'deki düşüş primi tehlikeye atıyor, içim sızlıyor... 📉😔"
             )
-        
-        # 6. Genel Mağaza ve Ciro Soruları
-        elif any(k in soru for k in ["hedef", "ciro", "bütçe", "prim", "satış", "ankara", "merter", "zeruj", "mağaza"]):
+
+        # 5. Zeruj Prim Simülasyonu
+        elif "zeruj" in soru:
+            hedef = 7470294
+            gerceklesen = 370499
+            oran, prim = prim_hesapla("zeruj", gerceklesen, hedef)
+            
             bot_yaniti = (
-                "📊 **Genel Mağaza Verileri:**\n"
-                "Sistemimizde **Ağustos ayı** kapanış verileri ile **Eylül ayı ilk 3 gün** hedef ve gerçekleşen ciro/adet tablosu bulunmaktadır. "
-                "Hangi ayın (Ağustos veya Eylül) detayını incelemek istiyorsun?"
+                "🛍️ **Zeruj Toplam Prim ve Hedef Durumu:**\n"
+                f"- **Hedef Ciro:** {hedef:,} TRY\n"
+                f"- **Mevcut Gerçekleşen:** {gerceklesen:,} TRY (Gerçekleşme Oranı: %{oran:.1f})\n"
+                f"- **Mevcut Prim Hakedişi:** {prim:,} TRY\n\n"
+                "📌 **Simülasyon / Hedef Baremleri:**\n"
+                "- %90 - %99: 53.786 TRY\n"
+                "- %100 - %109: 89.644 TRY\n"
+                "- %110+: 123.260 TRY\n"
+                "Hacim büyük, ödül büyük ama mevcut seyir bizi üzüyor..."
             )
-        
+
+        # 6. Genel Durum
+        elif any(k in soru for k in ["hedef", "ciro", "eylül", "prim", "bütçe"]):
+            bot_yaniti = (
+                "📉 **Genel Prim ve Hedef Durumu:**\n"
+                "Eylül ayı genel ciro hedeflerimizin altındayız. Ankara, Merter veya Zeruj mağazalarından hangisinin prim simülasyonunu ve detaylı baremlerini görmek istiyorsun?"
+            )
+
         # 7. Kapsam Dışı Güvenlik Duvarı
         else:
             bot_yaniti = "Bu konu hakkında bilgi vermem, Deniz bey kızar :)"
