@@ -80,8 +80,8 @@ if prompt := st.chat_input("Örn: Hangi ürünün stoğu az kalmış?"):
                     f"Tablo Sütunları:\n{headers}\n\nVeri Örneği:\n{rows}\n\nSoru: {prompt}"
                 )
                 
-                # Model güncellendi
-                model = genai.GenerativeModel('gemini-2.5-flash')
+                # Güncel model adı
+                model = genai.GenerativeModel('gemini-3.6-flash')
                 response = model.generate_content(system_prompt)
                 
                 bot_yaniti = response.text
