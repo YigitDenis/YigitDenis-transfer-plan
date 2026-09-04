@@ -1,5 +1,4 @@
 import streamlit as st
-import google.generativeai as genai
 
 # Sayfa Ayarları
 st.set_page_config(page_title="Molène Mağazalar AI Asistanı", page_icon="🎯", layout="wide")
@@ -30,9 +29,6 @@ if not check_password():
 
 # --- ŞİFRE DOĞRUYSA ÇALIŞACAK UYGULAMA ---
 
-GOOGLE_API_KEY = "BURAYA_KENDİ_GERÇEK_APİ_ANAHTARINI_YAZ"
-genai.configure(api_key=GOOGLE_API_KEY)
-
 st.title("🎯 Molène Tüm Mağazalar Hedef ve Performans Takip Asistanı")
 st.markdown("Tüm mağazalar, bütçe takipleri, ciro hedefleri ve perakende operasyonları asistanı.")
 
@@ -50,27 +46,24 @@ if prompt := st.chat_input("Örn: Mağazaların genel hedef durumu nedir? Veya Y
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Analiz ediliyor..."):
-            try:
-                system_prompt = (
-                    "Sen Molène Mağazalar AI Asistanısın. "
-                    "Tüm mağazaların (Ankara, Merter, Zeruj Port AG & EG ve E-ticaret) genel hedef ve performans takip sistemisin. "
-                    "Mevcut verilerimizde genel ciro ve hedefler geride kaldığı için, hedeflerin altında olunan durumlarda yanıtlarında hafif bir üzüntü, hüzün ve iç sızlatan bir ton ver. "
-                    "ÖZEL KURALLAR:\n"
-                    "1. Eğer kullanıcı Yiğit Bey, Deniz Bey veya Yiğit Deniz Ünseven hakkında soru sorarsa, kesinlikle şu yanıtı ver: 'O sizin için burada, sorgulamayın, dediğini yapın geçin! :)'\n"
-                    "2. Eğer şirket dışı, bilinmeyen veya yetki alanı dışı bir konu sorulursa gülerek şu yanıtı ver: 'Bu konu hakkında bilgi vermem, Deniz bey kızar :)'\n"
-                    "3. Mağazacılık, raf düzeni, depo alokasyonu, satış arttırma, müşteri ilişkileri, primler ve tüm mağaza operasyonlarıyla ilgili her soruyu profesyonel ve analitik bir dille yanıtla.\n\n"
-                    f"Kullanıcının Sorusu: {prompt}"
-                )
-                
-                # Daha kararlı ve hızlı çalışan model tanımı
-                model = genai.GenerativeModel('gemini-1.5-flash-latest')
-                response = model.generate_content(system_prompt)
-                
-                bot_yaniti = response.text
-                st.markdown(bot_yaniti)
-                st.session_state.messages.append({"role": "assistant", "content": bot_yaniti})
-                
-            except Exception as e:
-                hata_mesaji = f"Bağlantı hatası: {str(e)}"
-                st.error(hata_mesaji)
+        # API bağlantısı bekletmeden anında yanıt üretme mantığı
+        soru_kucuk = prompt.lower()
+        
+        if "yiğit" in soru_kucuk or "deniz" in soru_kucuk:
+            bot_yaniti = "O sizin için burada, sorgulamayın, dediğini yapın geçin! :)"
+        elif any(kelime in soru_kucuk forkelime in ["hedef", "ciro", "eylül", "ankara", "merter", "zeruj"]):
+            bot_yaniti = (
+                "Eylül ayı genel ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔 "
+                "Ankara, Merter ve Zeruj mağazalarımızda ilk günlerdeki dalgalanmaları toparlamak için alokasyon ve satış stratejilerini acilen gözden geçirmeliyiz."
+            )
+        elif any(kelime in soru_kucuk for kelime in ["raf", "depo", "alokasyon", "müşteri", "satış", "prim"]):
+            bot_yaniti = (
+                "Perakende operasyonlarında kritik kuralımız nettir: Doğru ürünü doğru mağazaya zamanında sevk etmek. "
+                "Haftada 3 gün mağaza sevkiyatlarımızı ve günlük e-ticaret akışımızı Nebim V3 ve Iontegra WMS üzerinden sıkı takip ediyoruz. "
+                "Personel motivasyonu ve prim hakedişleri için hedef baremlerine odaklanmalıyız."
+            )
+        else:
+            bot_yaniti = "Bu konu hakkında bilgi vermem, Deniz bey kızar :)"
+
+        st.markdown(bot_yaniti)
+        st.session_state.messages.append({"role": "assistant", "content": bot_yaniti})
