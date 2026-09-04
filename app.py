@@ -27,7 +27,7 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- MÜKEMMEL ÇALIŞAN AKILLI YERLEŞİK MOTOR ---
+# --- NET VE ODAKLI KURUMSAL MOTOR ---
 
 st.title("🎯 Molène Tüm Mağazalar Hedef ve Performans Takip Asistanı")
 st.markdown("Tüm mağazalar, bütçe takipleri, ciro hedefleri ve perakende operasyonları asistanı.")
@@ -40,7 +40,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Örn: Karl Marks kimdir? Veya Ankara mağazası eylül ayı durumu ne?"):
+if prompt := st.chat_input("Örn: Eylül ayı hedefleri nasıl? Veya Yiğit Deniz Ünseven kimdir?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -48,43 +48,35 @@ if prompt := st.chat_input("Örn: Karl Marks kimdir? Veya Ankara mağazası eyl�
     with st.chat_message("assistant"):
         soru = prompt.lower()
         
-        # 1. Yiğit Deniz Kuralı
-        if "yiğit" in soru or "deniz" in soru:
+        # 1. Yiğit Deniz / Deniz Bey Kuralı
+        if any(k in soru for k in ["yiğit", "deniz", "ünseven"]):
             bot_yaniti = "O sizin için burada, sorgulamayın, dediğini yapın geçin! :)"
         
-        # 2. Selamlaşma ve Hal Hatır
-        elif any(k in soru for k in ["selam", "merhaba", "mrb", "günaydın", "iyi akşamlar", "nasılsın", "ne naber"]):
-            bot_yaniti = "Aleykümselam! Çok iyiyim, Molène ekibiyle birlikte tempoyu düşürmeden çalışıyoruz. Sen nasılsın, bugün hangi departman konularına bakıyoruz? 😊"
+        # 2. Selamlaşma, Hal Hatır ve Naber
+        elif any(k in soru for k in ["selam", "merhaba", "mrb", "günaydın", "iyi akşamlar", "nasılsın", "ne naber", "naber", "selamın aleyküm"]):
+            bot_yaniti = "Aleykümselam! Çok iyiyim, Molène verileriyle çalışmaya devam ediyorum. Sen nasılsın, hangi mağazanın hedeflerine bakıyoruz?"
         
-        # 3. Genel Kültür (Örn: Karl Marks vb.)
-        elif "karl marks" in soru or "marx" in soru:
-            bot_yaniti = "Karl Marks, 19. yüzyılda yaşamış Alman filozof, ekonomist ve politik teorisyendir. Özellikle Kapital ve Komünist Manifesto eserleriyle tanınır; kapitalist ekonomi sistemini eleştiren teorileriyle bilinir."
-        elif "tarih" in soru or "felsefe" in soru or "bilim" in soru:
-            bot_yaniti = f" '{prompt}' konusu oldukça derin ve analitik bir konu. Molène ekibi olarak her alanda olduğu gibi bilgiye de stratejik yaklaşıyoruz!"
-        
-        # 4. Şirket, Kurucular ve Mağazalar (Bilal Bey ve Semih Bey)
-        elif any(k in soru for k in ["molène", "molene", "kurucu", "ortak", "bilal", "semih", "mağaza", "zeruj", "ankara", "merter", "depo", "e-ticaret"]):
+        # 3. Patronlar ve Şirket Bilgisi
+        elif any(k in soru for k in ["patron", "sahip", "kurucu", "ortak", "bilal", "semih", "molène", "molene"]):
             bot_yaniti = (
-                "Molène, kadın giyim sektöründe faaliyet gösteren öncü bir markadır. "
-                "Kurucu ortaklarımız Bilal Bey & eşi Ayşegül Hanım ile Semih Bey & eşi Esma Hanım'dır. "
-                "Mağazalarımız: Zeruj Port (AG & EG), Ankara ATG, Merter mağazası ve güçlü E-ticaret kanalımızdır. "
-                "Depomuz in-house çalışmakta; mağazalara haftada 3 gün, e-ticarete her gün sevkiyat yapılmaktadır."
+                "Molène markasının kurucu ortakları Bilal Bey & eşi Ayşegül Hanım ile Semih Bey & eşi Esma Hanım'dır. "
+                "İdari ve operasyonel süreçlerin merkezi ise Yiğit Deniz Ünseven'dir."
             )
         
-        # 5. Eylül / Ağustos Ayı Hedef ve Ciro Durumu (Hüzünlü Ton)
-        elif any(k in soru for k in ["hedef", "ciro", "eylül", "ağustos", "bütçe", "prim", "satış"]):
+        # 4. Mağazalar, Hedefler ve Ciro Verileri (Eylül Ayı İlk 3 Gün Özeti)
+        elif any(k in soru for k in ["hedef", "ciro", "eylül", "bütçe", "prim", "satış", "ankara", "merter", "zeruj", "mağaza"]):
             bot_yaniti = (
-                "Eylül ayı genel ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔 "
-                "Ankara, Merter ve Zeruj mağazalarımızda ilk günlerdeki dalgalanmaları toparlamak için Nebim V3 ve Iontegra WMS verileri üzerinden alokasyon ve satış stratejilerini acilen sıkı tutmalıyız."
+                "Eylül ayı genel ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔\n\n"
+                "📊 **Eylül Ayı İlk 3 Gün Özeti:**\n"
+                "- **Toplam Hedef Ciro:** 12.086.275 TRY | **Gerçekleşen:** 626.615 TRY\n"
+                "- **Ankara Mağaza:** Hedef 3.506.994 TRY | İlk 3 gün toplam: 187.495 TRY (%100.6, %57.5, %44.5)\n"
+                "- **Merter Mağaza:** Hedef 1.108.987 TRY | İlk 3 gün toplam: 68.620 TRY (%100, %97, %37)\n"
+                "- **Zeruj Toplam:** Hedef 7.470.294 TRY | İlk 3 gün toplam: 370.499 TRY (%46.2, %63.6, %75.2)"
             )
         
-        # 6. Yetki Dışı / Güvenlik Duvarı
-        elif "sır" in soru in soru or "şifre" in soru or "maaş" in soru:
-            bot_yaniti = "Bu konu hakkında bilgi vermem, Deniz bey kızar :)"
-        
-        # 7. Diğer Tüm Genel Sorular İçin Akıllı Esneklik
+        # 5. Kapsam Dışı Her Şey İçin Güvenlik Duvarı
         else:
-            bot_yaniti = f" '{prompt}' konusunu ve perakende dinamiklerimizi Nebim V3 ve Iontegra WMS altyapımızla harmanlayıp en doğru analizi çıkarabiliriz. Başka hangi detayla devam edelim?"
+            bot_yaniti = "Bu konu hakkında bilgi vermem, Deniz bey kızar :)"
 
         st.markdown(bot_yaniti)
         st.session_state.messages.append({"role": "assistant", "content": bot_yaniti})
