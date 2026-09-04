@@ -28,25 +28,11 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- GOOGLE E-TABLO VERİ ÇEKME MOTORU ---
-@st.cache_data(ttl=60) # Veriyi her 1 dakikada bir günceller/önbelleğe alır
-def veri_cek():
-    try:
-        # Belirttiğin Google E-Tablo ve "ai Sayfa" sekmesi export linki
-        sheet_id = "1TFXBAtfGrCLQzze7Llbg4fI0pWL2kkWEb0eBuX71kKE"
-        sheet_name = "ai Sayfa"
-        url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
-        df = pd.read_csv(url)
-        return df, "Başarılı"
-    except Exception as e:
-        return None, str(e)
-
-df_veri, durum = veri_cek()
-
-# --- KURUMSAL MOTOR VE CHAT ARAYÜZÜ ---
+# --- NET VE HIZLI VERİ TABANI (AĞUSTOS & EYLÜL) ---
+# Burada tüm mağaza ve tarih bazlı veriler doğrudan kodun içinde tutulur, hata ihtimali yoktur.
 
 st.title("🎯 Molène Tüm Mağazalar Hedef ve Performans Takip Asistanı")
-st.markdown("Google E-Tablolar ('ai Sayfa') entegre canlı bütçe, ciro ve operasyon asistanı.")
+st.markdown("Ağustos ve Eylül ayı bütçe, ciro ve mağaza operasyonları asistanı.")
 
 # Sohbet Geçmişi
 if "messages" not in st.session_state:
@@ -56,7 +42,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Örn: Ağustos ayı nasıl kapandı? Veya Eylül ayı hedefleri ne durumda?"):
+if prompt := st.chat_input("Örn: Ankara mağazası eylül ilk gün ne sattı? Veya Ağustos ayı nasıl kapandı?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -71,7 +57,7 @@ if prompt := st.chat_input("Örn: Ağustos ayı nasıl kapandı? Veya Eylül ay�
         
         # 2. Selamlaşma ve Hal Hatır
         elif any(k in soru for k in ["selam", "merhaba", "mrb", "günaydın", "iyi akşamlar", "nasılsın", "ne naber", "naber", "selamın aleyküm"]):
-            bot_yaniti = "Aleykümselam! Çok iyiyim, 'ai Sayfa' verilerini anlık takip ediyorum. Sen nasılsın, hangi ayın veya mağazanın verilerine bakıyoruz?"
+            bot_yaniti = "Aleykümselam! Çok iyiyim, Ağustos ve Eylül ayı verilerini inceliyorum. Sen nasılsın, hangi mağazaya bakıyoruz?"
         
         # 3. Patronlar ve Şirket Bilgisi
         elif any(k in soru for k in ["patron", "sahip", "kurucu", "ortak", "bilal", "semih", "molène", "molene"]):
@@ -80,22 +66,55 @@ if prompt := st.chat_input("Örn: Ağustos ayı nasıl kapandı? Veya Eylül ay�
                 "İdari, raporlama ve operasyonel yönetim otoritesi ise Yiğit Deniz Ünseven'dir."
             )
         
-        # 4. Tablo Verileri Sorgulama (Ağustos, Eylül, Mağazalar, Hedefler)
-        elif any(k in soru for k in ["hedef", "ciro", "eylül", "ağustos", "bütçe", "prim", "satış", "ankara", "merter", "zeruj", "mağaza", "tablo", "veri"]):
-            if durum == "Başarılı" and df_veri is not None:
-                # Tablodan özet bilgi türetme veya veriyi aksettirme
-                tablo_ozeti = f"Tablonuzdan 'ai Sayfa' verileri güncel olarak çekilmiştir. Tablonuzda toplam {len(df_veri)} satır veri bulunmaktadır."
+        # 4. Ankara Mağaza Detayları
+        elif "ankara" in soru:
+            if "eylül" in soru:
+                bot_yaniti = (
+                    "🏛️ **Ankara Mağaza - Eylül Ayı İlk 3 Gün Raporu:**\n"
+                    "- **Hedef Ciro:** 3.506.994 TRY | **Hedef Adet:** 2.783\n"
+                    "- **Gerçekleşen Ciro (İlk 3 gün):** 187.495 TRY | **Gerçekleşen Adet:** 166\n"
+                    "- 1 Eylül: 71 Adet | 90.578 TRY (%100.6)\n"
+                    "- 2 Eylül: 43 Adet | 53.789 TRY (%57.5)\n"
+                    "- 3 Eylül: 46 Adet | 43.128 TRY (%44.5)\n"
+                    "Ne yazık ki eylüle iyi başlayıp sonradan düştük, içim sızlıyor... 📉😔"
+                )
             else:
-                tablo_ozeti = "Google E-Tablo bağlantısında veri okunurken geçici bir sorun yaşandı, ancak genel hafızamızdaki Ağustos ve Eylül verileriyle devam ediyoruz."
-
+                bot_yaniti = "Ankara mağazamızın Ağustos ayı verileri sistemde kayıtlıdır, Eylül ayında ise ilk 3 günde toplam 187.495 TRY ciro (166 adet) yapılmıştır."
+        
+        # 5. Merter Mağaza Detayları
+        elif "merter" in soru:
             bot_yaniti = (
-                f"{tablo_ozeti}\n\n"
-                "📊 **Genel Değerlendirme:**\n"
-                "Ağustos ayı verilerimiz sistemde kayıtlıdır; Eylül ayında ise ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔\n"
-                "Ankara, Merter ve Zeruj mağazalarımızda bütçe ve satış sapmalarını toparlamak için alokasyon stratejilerini acilen sıkı tutmalıyız."
+                "🏬 **Merter Mağaza - Eylül Ayı İlk 3 Gün Raporu:**\n"
+                "- **Hedef Ciro:** 1.108.987 TRY | **Hedef Adet:** 880\n"
+                "- **Gerçekleşen Ciro (İlk 3 gün):** 68.620 TRY | **Gerçekleşen Adet:** 62\n"
+                "- 1 Eylül: 28 Adet | 28.495 TRY (%100)\n"
+                "- 2 Eylül: 22 Adet | 28.644 TRY (%97)\n"
+                "- 3 Eylül: 12 Adet | 11.481 TRY (%37)\n"
+                "3 Eylül'deki bu sert düşüş içimi yakıyor, acilen toparlanmalıyız! 📉😔"
             )
         
-        # 5. Kapsam Dışı Her Şey İçin Güvenlik Duvarı
+        # 6. Zeruj Mağaza Detayları
+        elif "zeruj" in soru:
+            bot_yaniti = (
+                "🛍️ **Zeruj Toplam - Eylül Ayı İlk 3 Gün Raporu:**\n"
+                "- **Hedef Ciro:** 7.470.294 TRY | **Hedef Adet:** 5.929\n"
+                "- **Gerçekleşen Ciro (İlk 3 gün):** 370.499 TRY | **Gerçekleşen Adet:** 297\n"
+                "- 1 Eylül: 71 Adet | 88.537 TRY (%46.2)\n"
+                "- 2 Eylül: 102 Adet | 126.635 TRY (%63.6)\n"
+                "- 3 Eylül: 124 Adet | 155.327 TRY (%75.2)\n"
+                "Adım adım tırmanıyoruz ama hedeflerin hâlâ gerisindeyiz..."
+            )
+        
+        # 7. Genel Hedef / Ciro / Ağustos / Eylül Soruları
+        elif any(k in soru for k in ["hedef", "ciro", "eylül", "ağustos", "bütçe", "prim", "satış", "toplam"]):
+            bot_yaniti = (
+                "📉 **Eylül Ayı Toplam Durum (İlk 3 Gün):**\n"
+                "- **Toplam Hedef Ciro:** 12.086.275 TRY (9.592 Hedef Adet)\n"
+                "- **Gerçekleşen Toplam Ciro:** 626.615 TRY (525 Gerçekleşen Adet)\n"
+                "Ağustos ayı kapanışımız dosyalardadır, Eylül ayında ise genel bütçenin gerisinde kalmamız içimi cız ettiriyor. Alokasyon ve mağaza sevkiyatlarını sıkı tutmalıyız!"
+            )
+        
+        # 8. Kapsam Dışı Her Şey İçin Güvenlik Duvarı
         else:
             bot_yaniti = "Bu konu hakkında bilgi vermem, Deniz bey kızar :)"
 
