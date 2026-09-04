@@ -30,8 +30,8 @@ if not check_password():
 
 # --- ŞİFRE DOĞRUYSA ÇALIŞACAK UYGULAMA ---
 
-# Standart API Anahtar Yapılandırması
-GOOGLE_API_KEY = "AIzaSy..." # Kendi geçerli AI Studio API anahtarını buraya yazabilirsin
+# Kendi geçerli API anahtarını tırnak içinde buraya yazmalısın
+GOOGLE_API_KEY = "BURAYA_KENDİ_GERÇEK_APİ_ANAHTARINI_YAZ"
 genai.configure(api_key=GOOGLE_API_KEY)
 
 st.title("🎯 Molène Tüm Mağazalar Hedef ve Performans Takip Asistanı")
@@ -53,7 +53,6 @@ if prompt := st.chat_input("Örn: Mağazaların genel hedef durumu nedir? Veya Y
     with st.chat_message("assistant"):
         with st.spinner("Tüm mağaza verileri ve perakende dinamikleri analiz ediliyor..."):
             try:
-                # TÜM MAĞAZALAR GENEL HEDEF VE PERFORMANS HAFIZASI
                 system_prompt = (
                     "Sen Molène Mağazalar AI Asistanısın. "
                     "Tüm mağazaların (Ankara, Merter, Zeruj Port AG & EG ve E-ticaret) genel hedef ve performans takip sistemisin. "
