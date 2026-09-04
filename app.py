@@ -1,4 +1,5 @@
 import streamlit as st
+import datetime
 
 # Sayfa Ayarları
 st.set_page_config(
@@ -31,12 +32,14 @@ def check_password():
 if not check_password():
     st.stop()
 
-# --- AUGUSTOS SABİT VERİLERİ ---
+# --- AĞUSTOS SABİT VERİLERİ ---
 AGUSTOS_VERILERI = {
     "toplam": {"hedef_ciro": 10215505.88, "gerceklesen_ciro": 10071896.05, "oran": "%99"},
 }
 
 # --- EYLÜL VERİLERİ İÇİN STATE (HAFIZA) YÖNETİMİ ---
+if "veri_tarihi" not in st.session_state:
+    st.session_state.veri_tarihi = datetime.date(2026, 9, 4)
 if "eylul_ankara_ciro" not in st.session_state:
     st.session_state.eylul_ankara_ciro = 187495.0
     st.session_state.eylul_ankara_adet = 166
@@ -45,11 +48,13 @@ if "eylul_ankara_ciro" not in st.session_state:
     st.session_state.eylul_zeruj_ciro = 370499.0
     st.session_state.eylul_zeruj_adet = 297
 
-# --- YAN MENÜ: VERİ GİRİŞ PANELİ ---
+# --- YAN MENÜ: VERİ GİRİŞ VE DÜZENLEME PANELİ ---
 st.sidebar.header("⚙️ Eylül Veri Giriş Paneli")
-st.sidebar.markdown("Yarın veriler değiştiğinde buraya yazıp **Güncelle** butonuna basman yeterlidir.")
+st.sidebar.markdown("Yanlış veri girersen kutucukları düzeltip tekrar güncelle diyebilir veya sıfırlayabilirsin.")
 
 with st.sidebar.form("veri_formu"):
+    secilen_tarih = st.date_input("Veri Tarihi", value=st.session_state.veri_tarihi)
+    
     st.subheader("🏛️ Ankara Mağaza")
     ankara_c = st.number_input("Ankara Ciro (TRY)", value=st.session_state.eylul_ankara_ciro)
     ankara_a = st.number_input("Ankara Adet", value=st.session_state.eylul_ankara_adet, step=1)
@@ -62,19 +67,32 @@ with st.sidebar.form("veri_formu"):
     zeruj_c = st.number_input("Zeruj Ciro (TRY)", value=st.session_state.eylul_zeruj_ciro)
     zeruj_a = st.number_input("Zeruj Adet", value=st.session_state.eylul_zeruj_adet, step=1)
     
-    submit_btn = st.form_submit_button("🔄 Verileri Güncelle")
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+        submit_btn = st.form_submit_button("🔄 Güncelle")
+    with col_f2:
+        reset_btn = st.form_submit_button("🗑️ Sıfırla")
     
     if submit_btn:
+        st.session_state.veri_tarihi = secilen_tarih
         st.session_state.eylul_ankara_ciro = ankara_c
         st.session_state.eylul_ankara_adet = ankara_a
         st.session_state.eylul_merter_ciro = merter_c
         st.session_state.eylul_merter_adet = merter_a
         st.session_state.eylul_zeruj_ciro = zeruj_c
         st.session_state.eylul_zeruj_adet = zeruj_a
-        st.success("Veriler başarıyla güncellendi!")
+        st.success("Veriler güncellendi!")
+
+    if reset_btn:
+        st.session_state.eylul_ankara_ciro = 0.0
+        st.session_state.eylul_ankara_adet = 0
+        st.session_state.eylul_merter_ciro = 0.0
+        st.session_state.eylul_merter_adet = 0
+        st.session_state.eylul_zeruj_ciro = 0.0
+        st.session_state.eylul_zeruj_adet = 0
+        st.warning("Veriler sıfırlandı!")
 
 # --- HESAPLAMALAR ---
-# Hedefler sabit
 hedef_ankara, hedef_merter, hedef_zeruj = 3506994.0, 1108987.0, 7470294.0
 hedef_toplam_ciro = hedef_ankara + hedef_merter + hedef_zeruj
 hedef_toplam_adet = 2783 + 880 + 5929
@@ -85,7 +103,7 @@ genel_oran = (gerc_toplam_ciro / hedef_toplam_ciro) * 100 if hedef_toplam_ciro >
 
 # --- ANA DASHBOARD EKRANI ---
 st.title("🎯 Molène Mağazalar | Ağustos & Eylül Performans Dashboard")
-st.markdown("Ağustos resmi kapanış verileri ve yan panelden anlık güncellenen Eylül takip ekranı.")
+st.markdown(f"Ağustos resmi kapanış verileri ve **{st.session_state.veri_tarihi.strftime('%d.%m.%Y')}** tarihli güncel Eylül takip ekranı.")
 
 st.markdown("### 📈 Ağustos Ayı Kesinleşmiş Kapanış Özet Kartları")
 c1, c2, c3, c4 = st.columns(4)
@@ -97,7 +115,7 @@ c4.metric("Kapanış Durumu", "Tamamlandı 🟢")
 
 st.markdown("---")
 
-st.markdown("### 📉 Eylül Ayı Canlı Performans Özeti")
+st.markdown("### 📉 Eylül Ayı Performans Özeti")
 e1, e2, e3, e4 = st.columns(4)
 e1.metric("Eylül Hedef Ciro", f"{hedef_toplam_ciro:,.2f} TRY")
 e2.metric("Eylül Gerçekleşen", f"{gerc_toplam_ciro:,.2f} TRY")
