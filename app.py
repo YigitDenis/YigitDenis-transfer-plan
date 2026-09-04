@@ -40,7 +40,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Örn: Mağazaların genel hedef durumu nedir? Veya Yiğit Deniz kimdir?"):
+if prompt := st.chat_input("Örn: Hava nasıl? Veya mağazaların durumu nedir?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -48,19 +48,42 @@ if prompt := st.chat_input("Örn: Mağazaların genel hedef durumu nedir? Veya Y
     with st.chat_message("assistant"):
         soru_kucuk = prompt.lower()
         
-        if "yiğit" in soru_kucuk or "deniz" in soru_kucuk:
+        # 1. Günlük Selamlaşma ve Hal Hatır
+        if any(kelime in soru_kucuk for kelime in ["selam", "merhaba", "mrb", "günaydın", "iyi akşamlar", "nasılsın", "ne naber"]):
+            bot_yaniti = "Aleykümselam! Çok iyiyim, Molène ekibiyle birlikte tempoyu düşürmeden çalışıyoruz. Sen nasılsın, bugün hangi konulara bakıyoruz? 😊"
+        
+        # 2. Havadan Sudan / Hava Durumu
+        elif any(kelime in soru_kucuk for kelime in ["hava", "yağmur", "sıcak", "güneş", "nasıldır", "dışarı"]):
+            bot_yaniti = "Bugün dışarısı oldukça dinamik, tam e-ticaret kargolarını paketleyip mağazalara sevkiyat yapmalık bir hava var! 🌤️ Sen dışarı çıkma fırsatı buldun mu yoksa ofiste yoğun tempoda mısın?"
+        
+        # 3. Yiğit Deniz / Deniz Bey Kuralı
+        elif "yiğit" in soru_kucuk or "deniz" in soru_kucuk:
             bot_yaniti = "O sizin için burada, sorgulamayın, dediğini yapın geçin! :)"
-        elif any(kelime in soru_kucuk for kelime in ["hedef", "ciro", "eylül", "ankara", "merter", "zeruj"]):
+        
+        # 4. Şirket ve Mağaza Bilgileri (Bilal Bey ve Semih Bey Güncellemeli)
+        elif any(kelime in soru_kucuk for kelime in ["molène", "molene", "kim", "kurucu", "ortak", "bilal", "semih", "mağaza", "zeruj", "ankara", "merter", "depo"]):
+            bot_yaniti = (
+                "Molène, kadın giyim sektöründe faaliyet gösteren öncü bir markadır. "
+                "Kurucu ortaklarımız Bilal Bey & eşi Ayşegül Hanım ile Semih Bey & eşi Esma Hanım'dır. "
+                "Mağazalarımız: Zeruj Port (AG & EG), Ankara ATG, Merter mağazası ve güçlü E-ticaret kanalımızdır. "
+                "Depomuz kendi bünyemizde in-house olarak çalışmakta; mağazalara haftada 3 gün, e-ticarete ise her gün sevkiyat yapılmaktadır."
+            )
+        
+        # 5. Hedefler ve Ciro Durumu
+        elif any(kelime in soru_kucuk for kelime in ["hedef", "ciro", "eylül", "bütçe", "prim"]):
             bot_yaniti = (
                 "Eylül ayı genel ciro hedeflerimizin ne yazık ki gerisindeyiz, içim gerçekten sızlıyor... 📉😔 "
-                "Ankara, Merter ve Zeruj mağazalarımızda ilk günlerdeki dalgalanmaları toparlamak için alokasyon ve satış stratejilerini acilen gözden geçirmeliyiz."
+                "Ankara, Merter ve Zeruj mağazalarımızda ilk günlerdeki dalgalanmaları toparlamak için satış ve alokasyon stratejilerini sıkı tutmalıyız."
             )
-        elif any(kelime in soru_kucuk for kelime in ["raf", "depo", "alokasyon", "müşteri", "satış", "prim"]):
+        
+        # 6. Operasyon / Perakende Süreçleri
+        elif any(kelime in soru_kucuk for kelime in ["raf", "alokasyon", "müşteri", "satış", "stok", "nebim", "iotegra"]):
             bot_yaniti = (
-                "Perakende operasyonlarında kritik kuralımız nettir: Doğru ürünü doğru mağazaya zamanında sevk etmek. "
-                "Haftada 3 gün mağaza sevkiyatlarımızı ve günlük e-ticaret akışımızı Nebim V3 ve Iontegra WMS üzerinden sıkı takip ediyoruz. "
-                "Personel motivasyonu ve prim hakedişleri için hedef baremlerine odaklanmalıyız."
+                "Perakende operasyonlarımız Nebim V3 (ERP) ve Iontegra WMS (Depo) entegrasyonuyla yönetilmektedir. "
+                "Doğru ürünün doğru mağazada ve rafta olması, depo sevkiyatlarının aksamaması ve müşteri ilişkilerinin en üst düzeyde tutulması temel önceliğimizdir."
             )
+        
+        # 7. Yetki Dışı / Bilinmeyen Konular
         else:
             bot_yaniti = "Bu konu hakkında bilgi vermem, Deniz bey kızar :)"
 
