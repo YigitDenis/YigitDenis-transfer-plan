@@ -32,7 +32,7 @@ if not check_password():
 # --- ŞİFRE DOĞRUYSA ÇALIŞACAK UYGULAMA ---
 
 # Gemini API Yapılandırması
-GOOGLE_API_KEY = "AQ.Ab8RN6IrttZSm48twAcllBpiho2z5amf3tJLmmPvyns8Wcl8yQ"
+GOOGLE_API_KEY = "AQ.Ab8RN6LvlD9w3oxS8Re_mUbVfvPMaASoLGpob_WYG4nbIeugyw"
 genai.configure(api_key=GOOGLE_API_KEY)
 
 # Google Sheets Verisini Çekme Fonksiyonu
@@ -86,7 +86,6 @@ if prompt := st.chat_input("Örn: Hangi ürünün stoğu az kalmış?"):
                     f"Tablo Sütunları:\n{headers}\n\nVeri Örneği:\n{rows}\n\nSoru: {prompt}"
                 )
                 
-                # Güncel Gemini model çağrısı
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 response = model.generate_content(system_prompt)
                 
